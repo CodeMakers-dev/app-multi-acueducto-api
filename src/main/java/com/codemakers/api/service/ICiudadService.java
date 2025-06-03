@@ -2,8 +2,8 @@ package com.codemakers.api.service;
 
 import org.springframework.http.ResponseEntity;
 
+import com.codemakers.commons.dtos.CiudadDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.RolDTO;
 
 /**
  * @author nicope
@@ -15,14 +15,11 @@ import com.codemakers.commons.dtos.RolDTO;
  * 
  */
 
-public interface IRolService {
+public interface ICiudadService {
 
-	ResponseEntity<ResponseDTO> save(RolDTO rolDTO);
-	
-	ResponseEntity<ResponseDTO> findRolById(Integer id);
-
+	ResponseEntity<ResponseDTO> save(CiudadDTO ciudadDTO);
+    ResponseEntity<ResponseDTO> findById(Integer id);
     ResponseEntity<ResponseDTO> findAll();
+    ResponseEntity<ResponseDTO> deleteById(Integer id);
     
-    ResponseEntity<ResponseDTO> delete(Integer id);
-
 }

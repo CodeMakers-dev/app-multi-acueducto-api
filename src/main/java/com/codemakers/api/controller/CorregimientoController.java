@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.RolServiceImpl;
+import com.codemakers.api.service.impl.CorregimientoServiceImpl;
+import com.codemakers.commons.dtos.CorregimientoDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.RolDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,20 +28,20 @@ import lombok.RequiredArgsConstructor;
  * @version 1.0
  * 
  *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Rol).
+ *          tipo (Corregimiento).
  */
 
 @RestController
-@RequestMapping("/api/v1/Rol")
-@Tag(name = "Rol - Controller", description = "Controller encargado de gestionar las operaciones de los roles")
+@RequestMapping("/api/v1/Corregimiento")
+@Tag(name = "Corregimiento - Controller", description = "Controller encargado de gestionar las operaciones de los corregimientos")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class RolController {
+public class CorregimientoController {
 
-	private final RolServiceImpl rolServiceImpl;
+	private final CorregimientoServiceImpl corregimientoServiceImpl;
 	
-	@Operation(summary = "Operación que permite guardar o actualizar roles")
+	@Operation(summary = "Guardar o actualizar corregimiento")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -55,27 +55,11 @@ public class RolController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> saveRol(@RequestBody RolDTO rolDTO) {
-        return rolServiceImpl.save(rolDTO);
-    }
-	
-	@Operation(summary = "Operación que permite consultar todos los roles")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-    })
-	@GetMapping("/all")
-    public ResponseEntity<ResponseDTO> getAllRoles() {
-        return rolServiceImpl.findAll();
+    public ResponseEntity<ResponseDTO> save(@RequestBody CorregimientoDTO corregimientoDTO) {
+        return corregimientoServiceImpl.save(corregimientoDTO);
     }
 
-	@Operation(summary = "Operación que permite consultar rol por Id")
+    @Operation(summary = "Buscar corregimiento por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -87,11 +71,27 @@ public class RolController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
     })
     @GetMapping("/{id}")
-    public ResponseEntity<ResponseDTO> getRolById(@PathVariable Integer id) {
-        return rolServiceImpl.findRolById(id);
+    public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
+        return corregimientoServiceImpl.findById(id);
     }
-	
-	@Operation(summary = "Operación que permite eliminar un rol por Id")
+
+    @Operation(summary = "Listar todos los corregimientos")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @GetMapping("/all")
+    public ResponseEntity<ResponseDTO> getAll() {
+        return corregimientoServiceImpl.findAll();
+    }
+
+    @Operation(summary = "Eliminar corregimiento por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -101,8 +101,7 @@ public class RolController {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<ResponseDTO> deleteRolById(@PathVariable Integer id) {
-        return rolServiceImpl.delete(id);
+    public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
+        return corregimientoServiceImpl.deleteById(id);
     }
-
 }

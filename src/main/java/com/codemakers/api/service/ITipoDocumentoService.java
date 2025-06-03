@@ -3,7 +3,7 @@ package com.codemakers.api.service;
 import org.springframework.http.ResponseEntity;
 
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.RolDTO;
+import com.codemakers.commons.dtos.TipoDocumentoDTO;
 
 /**
  * @author nicope
@@ -15,14 +15,10 @@ import com.codemakers.commons.dtos.RolDTO;
  * 
  */
 
-public interface IRolService {
+public interface ITipoDocumentoService {
 
-	ResponseEntity<ResponseDTO> save(RolDTO rolDTO);
-	
-	ResponseEntity<ResponseDTO> findRolById(Integer id);
-
+	ResponseEntity<ResponseDTO> save(TipoDocumentoDTO tipoDocumentoDTO);
+    ResponseEntity<ResponseDTO> findById(Integer id);
     ResponseEntity<ResponseDTO> findAll();
-    
-    ResponseEntity<ResponseDTO> delete(Integer id);
-
+    ResponseEntity<ResponseDTO> deleteById(Integer id);
 }
