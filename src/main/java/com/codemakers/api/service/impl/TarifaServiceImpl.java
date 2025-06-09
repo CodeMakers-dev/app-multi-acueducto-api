@@ -1,22 +1,23 @@
 package com.codemakers.api.service.impl;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.codemakers.api.service.IPersonaService;
-import com.codemakers.commons.dtos.PersonaDTO;
+import com.codemakers.api.service.ITarifaService;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.entities.DireccionEntity;
-import com.codemakers.commons.entities.PersonaEntity;
-import com.codemakers.commons.entities.TipoDocumentoEntity;
-import com.codemakers.commons.maps.PersonaMapper;
-import com.codemakers.commons.repositories.DireccionRepository;
-import com.codemakers.commons.repositories.PersonaRepository;
-import com.codemakers.commons.repositories.TipoDocumentoRepository;
+import com.codemakers.commons.dtos.TarifaDTO;
+import com.codemakers.commons.entities.EmpresaEntity;
+import com.codemakers.commons.entities.TarifaEntity;
+import com.codemakers.commons.entities.TipoTarifaEntity;
+import com.codemakers.commons.maps.TarifaMapper;
+import com.codemakers.commons.repositories.EmpresaRepository;
+import com.codemakers.commons.repositories.TarifaRepository;
+import com.codemakers.commons.repositories.TipoTarifaRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -32,45 +33,45 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PersonaServiceImpl implements IPersonaService {
+public class TarifaServiceImpl implements ITarifaService{
 
-	private final PersonaRepository personaRepository;
-	private final DireccionRepository direccionRepository;
-	private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final PersonaMapper personaMapper;
-
-    @Override
-    public ResponseEntity<ResponseDTO> save(PersonaDTO personaDTO) {
-        log.info("Guardar/Actualizar persona");
+	private final TarifaRepository tarifaRepository;
+	private final EmpresaRepository empresaRepository;
+	private final TipoTarifaRepository tipoTarifaRepository;
+	private final TarifaMapper tarifaMapper;
+	
+	@Override
+    public ResponseEntity<ResponseDTO> save(TarifaDTO tarifaDTO) {
+        log.info("Guardar/Actualizar usuario");
         try {
-            boolean isUpdate = personaDTO.getId() != null && personaRepository.existsById(personaDTO.getId());
-            PersonaEntity entity;
+            boolean isUpdate = tarifaDTO.getId() != null && tarifaRepository.existsById(tarifaDTO.getId());
+            TarifaEntity entity;
 
             if (isUpdate) {
-                entity = personaRepository.findById(personaDTO.getId()).orElseThrow();
-                personaMapper.updateEntityFromDto(personaDTO, entity);
+                entity = tarifaRepository.findById(tarifaDTO.getId()).orElseThrow();
+                tarifaMapper.updateEntityFromDto(tarifaDTO, entity);
                 entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(personaDTO.getUsuarioModificacion());
+                entity.setUsuarioModificacion(tarifaDTO.getUsuarioModificacion());
             } else {
-                entity = personaMapper.dtoToEntity(personaDTO);
+                entity = tarifaMapper.dtoToEntity(tarifaDTO);
                 entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(personaDTO.getUsuarioCreacion());
+                entity.setUsuarioCreacion(tarifaDTO.getUsuarioCreacion());
                 entity.setActivo(true);
             }
 
-            if (personaDTO.getDireccion() != null && personaDTO.getDireccion().getId() != null) {
-                DireccionEntity direccion = direccionRepository.findById(personaDTO.getDireccion().getId())
-                    .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
-                entity.setDireccion(direccion);
+            if (tarifaDTO.getEmpresa() != null && tarifaDTO.getEmpresa().getId() != null) {
+                EmpresaEntity empresa = empresaRepository.findById(tarifaDTO.getEmpresa().getId())
+                    .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                entity.setEmpresa(empresa);
             }
-            if (personaDTO.getTipoDocumento() != null && personaDTO.getTipoDocumento().getId() != null) {
-                TipoDocumentoEntity tipoDocumento = tipoDocumentoRepository.findById(personaDTO.getTipoDocumento().getId())
-                    .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
-                entity.setTipoDocumento(tipoDocumento);
+            if (tarifaDTO.getTipoTarifa() != null && tarifaDTO.getTipoTarifa().getId() != null) {
+                TipoTarifaEntity tipoTarifa = tipoTarifaRepository.findById(tarifaDTO.getTipoTarifa().getId())
+                    .orElseThrow(() -> new RuntimeException("Tipo tarifa no encontrada"));
+                entity.setTipoTarifa(tipoTarifa);
             }
 
-            PersonaEntity saved = personaRepository.save(entity);
-            PersonaDTO savedDTO = personaMapper.entityToDto(saved);
+            TarifaEntity saved = tarifaRepository.save(entity);
+            TarifaDTO savedDTO = tarifaMapper.entityToDto(saved);
 
             String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
             int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -85,7 +86,7 @@ public class PersonaServiceImpl implements IPersonaService {
             return ResponseEntity.status(statusCode).body(responseDTO);
 
         } catch (Exception e) {
-            log.error("Error guardando persona", e);
+            log.error("Error guardando tarifa", e);
             ResponseDTO errorResponse = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.SAVE_ERROR)
@@ -98,11 +99,11 @@ public class PersonaServiceImpl implements IPersonaService {
 
     @Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar persona por id: {}", id);
+	    log.info("Buscar tarifa por id: {}", id);
 	    try {
-	        Optional<PersonaEntity> persona = personaRepository.findById(id);
-	        if (persona.isPresent()) {
-	            PersonaDTO dto = personaMapper.entityToDto(persona.get());
+	        Optional<TarifaEntity> tarifa = tarifaRepository.findById(id);
+	        if (tarifa.isPresent()) {
+	            TarifaDTO dto = tarifaMapper.entityToDto(tarifa.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -119,7 +120,7 @@ public class PersonaServiceImpl implements IPersonaService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar la persona por id: {}", id, e);
+	        log.error("Error al buscar la tarifa por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -128,13 +129,53 @@ public class PersonaServiceImpl implements IPersonaService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
+    
+    @Override
+    public ResponseEntity<ResponseDTO> findByEmpresaId(Integer empresaId) {
+        log.info("Buscar tarifas por id de empresa: {}", empresaId);
+        try {
+            List<TarifaEntity> tarifas = tarifaRepository.findByEmpresaId(empresaId);
+
+            if (!tarifas.isEmpty()) {
+                List<TarifaDTO> dtos = tarifas.stream()
+                        .map(tarifaMapper::entityToDto)
+                        .toList();
+
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(true)
+                        .message(Constantes.CONSULTED_SUCCESSFULLY)
+                        .code(HttpStatus.OK.value())
+                        .response(dtos)
+                        .build();
+
+                return ResponseEntity.ok(responseDTO);
+            } else {
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(false)
+                        .message(Constantes.CONSULTING_ERROR)
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build();
+
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+            }
+        } catch (Exception e) {
+            log.error("Error al buscar tarifas por id de empresa: {}", empresaId, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
 
     @Override
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todas las personas");
+        log.info("Listar todas las tarifas");
         try {
-            var list = personaRepository.findAll();
-            var dtoList = personaMapper.listEntityToDtoList(list);
+            var list = tarifaRepository.findAll();
+            var dtoList = tarifaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -143,7 +184,7 @@ public class PersonaServiceImpl implements IPersonaService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar las personas", e);
+            log.error("Error al listar las tarifas", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -156,9 +197,9 @@ public class PersonaServiceImpl implements IPersonaService {
 
     @Override
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar persona por id: {}", id);
+        log.info("Inicio método para eliminar tarifa por id: {}", id);
         try {
-            if (!personaRepository.existsById(id)) {
+            if (!tarifaRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -166,7 +207,7 @@ public class PersonaServiceImpl implements IPersonaService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            personaRepository.deleteById(id);
+            tarifaRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -174,7 +215,7 @@ public class PersonaServiceImpl implements IPersonaService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar la persona con id: {}", id, e);
+            log.error("Error al eliminar la tarifa con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)

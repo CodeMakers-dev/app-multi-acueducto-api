@@ -11,9 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.DireccionServiceImpl;
-import com.codemakers.commons.dtos.DireccionDTO;
+import com.codemakers.api.service.impl.AutenticacionServiceImpl;
+import com.codemakers.api.service.impl.UsuarioServiceImpl;
+import com.codemakers.commons.dtos.AutenticacionDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.UsuarioDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,20 +30,39 @@ import lombok.RequiredArgsConstructor;
  * @version 1.0
  * 
  *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Direccion).
+ *          tipo (Usuario).
  */
 
 @RestController
-@RequestMapping("/api/v1/Direccion")
-@Tag(name = "Direccion - Controller", description = "Controller encargado de gestionar las operaciones de las direcciones")
+@RequestMapping("/api/v1/Usuario")
+@Tag(name = "Usuario - Controller", description = "Controller encargado de gestionar las operaciones de los usuarios")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class DireccionController {
+public class UsuarioController {
 
-	private final DireccionServiceImpl direccionServiceImpl;
+	private final UsuarioServiceImpl usuarioServiceImpl;
+	private final AutenticacionServiceImpl autenticacionServiceImpl;
 	
-	@Operation(summary = "Guardar o actualizar direccion")
+	@Operation(summary = "Validar Usuario")
+	@ApiResponses(value = {
+	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	})
+	@PostMapping("/login")
+	public ResponseEntity<ResponseDTO> login(@RequestBody AutenticacionDTO autenticacionDTO) {
+	    return autenticacionServiceImpl.login(autenticacionDTO.getNombre(), autenticacionDTO.getContrasena());
+	}
+	
+	@Operation(summary = "Guardar o actualizar usuario")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -55,11 +76,11 @@ public class DireccionController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody DireccionDTO direccionDTO) {
-        return direccionServiceImpl.save(direccionDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody UsuarioDTO usuarioDTO) {
+        return usuarioServiceImpl.save(usuarioDTO);
     }
 
-    @Operation(summary = "Buscar direccion por id")
+    @Operation(summary = "Buscar usuario por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -72,10 +93,10 @@ public class DireccionController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return direccionServiceImpl.findById(id);
+        return usuarioServiceImpl.findById(id);
     }
 
-    @Operation(summary = "Listar todas las direcciones")
+    @Operation(summary = "Listar todas las usuario")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -88,10 +109,10 @@ public class DireccionController {
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return direccionServiceImpl.findAll();
+        return usuarioServiceImpl.findAll();
     }
 
-    @Operation(summary = "Eliminar direccion por id")
+    @Operation(summary = "Eliminar usuario por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -102,6 +123,6 @@ public class DireccionController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return direccionServiceImpl.deleteById(id);
+        return usuarioServiceImpl.deleteById(id);
     }
 }

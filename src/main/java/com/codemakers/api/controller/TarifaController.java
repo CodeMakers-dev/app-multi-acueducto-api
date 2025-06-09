@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.DireccionServiceImpl;
-import com.codemakers.commons.dtos.DireccionDTO;
+import com.codemakers.api.service.impl.TarifaServiceImpl;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.TarifaDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,20 +28,20 @@ import lombok.RequiredArgsConstructor;
  * @version 1.0
  * 
  *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Direccion).
+ *          tipo (Tarifa).
  */
 
 @RestController
-@RequestMapping("/api/v1/Direccion")
-@Tag(name = "Direccion - Controller", description = "Controller encargado de gestionar las operaciones de las direcciones")
+@RequestMapping("/api/v1/Tarifa")
+@Tag(name = "Tarifa - Controller", description = "Controller encargado de gestionar las operaciones de las tarifas")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class DireccionController {
+public class TarifaController {
 
-	private final DireccionServiceImpl direccionServiceImpl;
+	private final TarifaServiceImpl tarifaServiceImpl;
 	
-	@Operation(summary = "Guardar o actualizar direccion")
+	@Operation(summary = "Guardar o actualizar tarifa")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -55,11 +55,11 @@ public class DireccionController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody DireccionDTO direccionDTO) {
-        return direccionServiceImpl.save(direccionDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody TarifaDTO tarifaDTO) {
+        return tarifaServiceImpl.save(tarifaDTO);
     }
 
-    @Operation(summary = "Buscar direccion por id")
+    @Operation(summary = "Buscar tarifa por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -72,10 +72,26 @@ public class DireccionController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return direccionServiceImpl.findById(id);
+        return tarifaServiceImpl.findById(id);
+    }
+    
+    @Operation(summary = "Buscar las tarifas por el id de la empresa")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @GetMapping("/empresa/{id}")
+    public ResponseEntity<ResponseDTO> findByEmpresaId(@PathVariable Integer id) {
+        return tarifaServiceImpl.findByEmpresaId(id);
     }
 
-    @Operation(summary = "Listar todas las direcciones")
+    @Operation(summary = "Listar todas las tarifas")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -88,10 +104,10 @@ public class DireccionController {
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return direccionServiceImpl.findAll();
+        return tarifaServiceImpl.findAll();
     }
 
-    @Operation(summary = "Eliminar direccion por id")
+    @Operation(summary = "Eliminar tarifa por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -102,6 +118,6 @@ public class DireccionController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return direccionServiceImpl.deleteById(id);
+        return tarifaServiceImpl.deleteById(id);
     }
 }

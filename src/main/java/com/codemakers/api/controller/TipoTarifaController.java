@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.DireccionServiceImpl;
-import com.codemakers.commons.dtos.DireccionDTO;
+import com.codemakers.api.service.impl.TipoTarifaServiceImpl;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.TipoTarifaDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,20 +28,20 @@ import lombok.RequiredArgsConstructor;
  * @version 1.0
  * 
  *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Direccion).
+ *          tipo (TipoTarifa).
  */
 
 @RestController
-@RequestMapping("/api/v1/Direccion")
-@Tag(name = "Direccion - Controller", description = "Controller encargado de gestionar las operaciones de las direcciones")
+@RequestMapping("/api/v1/TipoTarifa")
+@Tag(name = "TipoTarifa - Controller", description = "Controller encargado de gestionar las operaciones de los tipos de tarifas")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class DireccionController {
+public class TipoTarifaController {
 
-	private final DireccionServiceImpl direccionServiceImpl;
+	private final TipoTarifaServiceImpl tipoTarifaServiceImpl;
 	
-	@Operation(summary = "Guardar o actualizar direccion")
+	@Operation(summary = "Guardar o actualizar tipo de tarifa")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -55,11 +55,11 @@ public class DireccionController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody DireccionDTO direccionDTO) {
-        return direccionServiceImpl.save(direccionDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody TipoTarifaDTO tipoTarifaDTO) {
+        return tipoTarifaServiceImpl.save(tipoTarifaDTO);
     }
 
-    @Operation(summary = "Buscar direccion por id")
+    @Operation(summary = "Buscar tipo tarifa por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -72,10 +72,10 @@ public class DireccionController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return direccionServiceImpl.findById(id);
+        return tipoTarifaServiceImpl.findById(id);
     }
 
-    @Operation(summary = "Listar todas las direcciones")
+    @Operation(summary = "Listar todos los tipos de tarifas")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -88,10 +88,10 @@ public class DireccionController {
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return direccionServiceImpl.findAll();
+        return tipoTarifaServiceImpl.findAll();
     }
 
-    @Operation(summary = "Eliminar direccion por id")
+    @Operation(summary = "Eliminar tipos de tarifa por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -102,6 +102,6 @@ public class DireccionController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return direccionServiceImpl.deleteById(id);
+        return tipoTarifaServiceImpl.deleteById(id);
     }
 }

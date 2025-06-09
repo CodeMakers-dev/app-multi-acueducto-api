@@ -5,18 +5,19 @@ import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import com.codemakers.api.service.IPersonaService;
-import com.codemakers.commons.dtos.PersonaDTO;
+import com.codemakers.api.service.IUsuarioService;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.entities.DireccionEntity;
+import com.codemakers.commons.dtos.UsuarioDTO;
 import com.codemakers.commons.entities.PersonaEntity;
-import com.codemakers.commons.entities.TipoDocumentoEntity;
-import com.codemakers.commons.maps.PersonaMapper;
-import com.codemakers.commons.repositories.DireccionRepository;
+import com.codemakers.commons.entities.RolEntity;
+import com.codemakers.commons.entities.UsuarioEntity;
+import com.codemakers.commons.maps.UsuarioMapper;
 import com.codemakers.commons.repositories.PersonaRepository;
-import com.codemakers.commons.repositories.TipoDocumentoRepository;
+import com.codemakers.commons.repositories.RolRepository;
+import com.codemakers.commons.repositories.UsuarioRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -32,45 +33,50 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class PersonaServiceImpl implements IPersonaService {
+public class UsuarioServiceImpl implements IUsuarioService {
 
+	private final UsuarioRepository usuarioRepository;
+	private final RolRepository rolRepository;
 	private final PersonaRepository personaRepository;
-	private final DireccionRepository direccionRepository;
-	private final TipoDocumentoRepository tipoDocumentoRepository;
-    private final PersonaMapper personaMapper;
-
-    @Override
-    public ResponseEntity<ResponseDTO> save(PersonaDTO personaDTO) {
-        log.info("Guardar/Actualizar persona");
+	private final UsuarioMapper usuarioMapper;
+	private final PasswordEncoder passwordEncoder;
+	
+	@Override
+    public ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO) {
+        log.info("Guardar/Actualizar usuario");
         try {
-            boolean isUpdate = personaDTO.getId() != null && personaRepository.existsById(personaDTO.getId());
-            PersonaEntity entity;
+            boolean isUpdate = usuarioDTO.getId() != null && usuarioRepository.existsById(usuarioDTO.getId());
+            UsuarioEntity entity;
 
             if (isUpdate) {
-                entity = personaRepository.findById(personaDTO.getId()).orElseThrow();
-                personaMapper.updateEntityFromDto(personaDTO, entity);
+                entity = usuarioRepository.findById(usuarioDTO.getId()).orElseThrow();
+                usuarioMapper.updateEntityFromDto(usuarioDTO, entity);
                 entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(personaDTO.getUsuarioModificacion());
+                entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
+                if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
+                    entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+                    }
             } else {
-                entity = personaMapper.dtoToEntity(personaDTO);
+                entity = usuarioMapper.dtoToEntity(usuarioDTO);
+                entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
                 entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(personaDTO.getUsuarioCreacion());
+                entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
                 entity.setActivo(true);
             }
 
-            if (personaDTO.getDireccion() != null && personaDTO.getDireccion().getId() != null) {
-                DireccionEntity direccion = direccionRepository.findById(personaDTO.getDireccion().getId())
-                    .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
-                entity.setDireccion(direccion);
+            if (usuarioDTO.getRol() != null && usuarioDTO.getRol().getId() != null) {
+                RolEntity rol = rolRepository.findById(usuarioDTO.getRol().getId())
+                    .orElseThrow(() -> new RuntimeException("Rol no encontrada"));
+                entity.setRol(rol);
             }
-            if (personaDTO.getTipoDocumento() != null && personaDTO.getTipoDocumento().getId() != null) {
-                TipoDocumentoEntity tipoDocumento = tipoDocumentoRepository.findById(personaDTO.getTipoDocumento().getId())
-                    .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
-                entity.setTipoDocumento(tipoDocumento);
+            if (usuarioDTO.getPersona() != null && usuarioDTO.getPersona().getId() != null) {
+                PersonaEntity persona = personaRepository.findById(usuarioDTO.getPersona().getId())
+                    .orElseThrow(() -> new RuntimeException("Persona no encontrado"));
+                entity.setPersona(persona);
             }
 
-            PersonaEntity saved = personaRepository.save(entity);
-            PersonaDTO savedDTO = personaMapper.entityToDto(saved);
+            UsuarioEntity saved = usuarioRepository.save(entity);
+            UsuarioDTO savedDTO = usuarioMapper.entityToDto(saved);
 
             String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
             int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -85,7 +91,7 @@ public class PersonaServiceImpl implements IPersonaService {
             return ResponseEntity.status(statusCode).body(responseDTO);
 
         } catch (Exception e) {
-            log.error("Error guardando persona", e);
+            log.error("Error guardando usuario", e);
             ResponseDTO errorResponse = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.SAVE_ERROR)
@@ -98,11 +104,11 @@ public class PersonaServiceImpl implements IPersonaService {
 
     @Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar persona por id: {}", id);
+	    log.info("Buscar usuario por id: {}", id);
 	    try {
-	        Optional<PersonaEntity> persona = personaRepository.findById(id);
-	        if (persona.isPresent()) {
-	            PersonaDTO dto = personaMapper.entityToDto(persona.get());
+	        Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
+	        if (usuario.isPresent()) {
+	            UsuarioDTO dto = usuarioMapper.entityToDto(usuario.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -119,7 +125,7 @@ public class PersonaServiceImpl implements IPersonaService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar la persona por id: {}", id, e);
+	        log.error("Error al buscar el usuario por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -131,10 +137,10 @@ public class PersonaServiceImpl implements IPersonaService {
 
     @Override
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todas las personas");
+        log.info("Listar todos los usuario");
         try {
-            var list = personaRepository.findAll();
-            var dtoList = personaMapper.listEntityToDtoList(list);
+            var list = usuarioRepository.findAll();
+            var dtoList = usuarioMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -143,7 +149,7 @@ public class PersonaServiceImpl implements IPersonaService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar las personas", e);
+            log.error("Error al listar los usuarios", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -156,9 +162,9 @@ public class PersonaServiceImpl implements IPersonaService {
 
     @Override
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar persona por id: {}", id);
+        log.info("Inicio método para eliminar usuario por id: {}", id);
         try {
-            if (!personaRepository.existsById(id)) {
+            if (!usuarioRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -166,7 +172,7 @@ public class PersonaServiceImpl implements IPersonaService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            personaRepository.deleteById(id);
+            usuarioRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -174,7 +180,7 @@ public class PersonaServiceImpl implements IPersonaService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar la persona con id: {}", id, e);
+            log.error("Error al eliminar el usuario con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)

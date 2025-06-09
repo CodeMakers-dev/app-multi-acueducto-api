@@ -7,18 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.codemakers.api.service.IDireccionService;
-import com.codemakers.commons.dtos.DireccionDTO;
+import com.codemakers.api.service.ILecturaService;
+import com.codemakers.commons.dtos.LecturaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.entities.CiudadEntity;
-import com.codemakers.commons.entities.CorregimientoEntity;
-import com.codemakers.commons.entities.DepartamentoEntity;
-import com.codemakers.commons.entities.DireccionEntity;
-import com.codemakers.commons.maps.DireccionMapper;
-import com.codemakers.commons.repositories.CiudadRepository;
-import com.codemakers.commons.repositories.CorregimientoRepository;
-import com.codemakers.commons.repositories.DepartamentoRepository;
-import com.codemakers.commons.repositories.DireccionRepository;
+import com.codemakers.commons.entities.ContadorEntity;
+import com.codemakers.commons.entities.LecturaEntity;
+import com.codemakers.commons.maps.LecturaMapper;
+import com.codemakers.commons.repositories.ContadorRepository;
+import com.codemakers.commons.repositories.LecturaRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -34,56 +30,41 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class DireccionServiceImpl implements IDireccionService {
+public class LecturaServiceImpl implements ILecturaService {
 
-	private final DireccionRepository direccionRepository;
-	private final CorregimientoRepository corregimientoRepository;
-	private final DepartamentoRepository departamentoRepository;
-	private final CiudadRepository ciudadRepository;
-	private final DireccionMapper direccionMapper;
+	private final LecturaRepository lecturaRepository;
+	private final ContadorRepository contadorRepository;
+	private final LecturaMapper lecturaMapper;
 	
 	@Override
-	public ResponseEntity<ResponseDTO> save(DireccionDTO direccionDTO) {
-	    log.info("Guardar/Actualizar direccion");
+	public ResponseEntity<ResponseDTO> save(LecturaDTO lecturaDTO) {
+	    log.info("Guardar/Actualizar lectura");
 	    try {
-	        boolean isUpdate = direccionDTO.getId() != null && direccionRepository.existsById(direccionDTO.getId());
-	        DireccionEntity entity;
-	        log.info("exite id direccion:{} ",direccionDTO.getId());
+	        boolean isUpdate = lecturaDTO.getId() != null && lecturaRepository.existsById(lecturaDTO.getId());
+	        LecturaEntity entity;
+	        log.info("existe id lectura:{} ", lecturaDTO.getId());
 	        if (isUpdate) {
-	            entity = direccionRepository.findById(direccionDTO.getId()).orElseThrow();
-	            direccionMapper.updateEntityFromDto(direccionDTO, entity);
+	            entity = lecturaRepository.findById(lecturaDTO.getId()).orElseThrow();
+	            lecturaMapper.updateEntityFromDto(lecturaDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(direccionDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(lecturaDTO.getUsuarioModificacion());
 	        } else {
-	            entity = direccionMapper.dtoToEntity(direccionDTO);
+	            entity = lecturaMapper.dtoToEntity(lecturaDTO);
+	            entity.setFechaLectura(new Date());
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(direccionDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(lecturaDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 	        
-	        if (direccionDTO.getDepartamentoId() != null && direccionDTO.getDepartamentoId().getId() != null) {
-	            DepartamentoEntity departamento = departamentoRepository
-	                .findById(direccionDTO.getDepartamentoId().getId())
-	                .orElseThrow(() -> new RuntimeException("Departamento no encontrado"));
-	            entity.setDepartamentoId(departamento);
-	        }
-	        
-	        if (direccionDTO.getCiudadId() != null && direccionDTO.getCiudadId().getId() != null) {
-	            CiudadEntity ciudad = ciudadRepository
-	                .findById(direccionDTO.getCiudadId().getId())
-	                .orElseThrow(() -> new RuntimeException("Ciudad no encontrado"));
-	            entity.setCiudadId(ciudad);
+	        if (lecturaDTO.getContador() != null && lecturaDTO.getContador().getId() != null) {
+	            ContadorEntity contador = contadorRepository
+	                .findById(lecturaDTO.getContador().getId())
+	                .orElseThrow(() -> new RuntimeException("Contador no encontrado"));
+	            entity.setContador(contador);
 	        }
 
-	        if (direccionDTO.getCorregimientoId() != null && direccionDTO.getCorregimientoId().getId() != null) {
-	            CorregimientoEntity corregimiento = corregimientoRepository
-	                .findById(direccionDTO.getCorregimientoId().getId())
-	                .orElseThrow(() -> new RuntimeException("Corregimiento no encontrado"));
-	            entity.setCorregimientoId(corregimiento);
-	        }
-
-	        DireccionEntity saved = direccionRepository.save(entity);
-	        DireccionDTO savedDTO = direccionMapper.entityToDto(saved);
+	        LecturaEntity saved = lecturaRepository.save(entity);
+	        LecturaDTO savedDTO = lecturaMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -98,7 +79,7 @@ public class DireccionServiceImpl implements IDireccionService {
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando dirección", e);
+	        log.error("Error guardando lectura", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	            .success(false)
 	            .message(Constantes.SAVE_ERROR)
@@ -111,11 +92,11 @@ public class DireccionServiceImpl implements IDireccionService {
 
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar direccion por id: {}", id);
+	    log.info("Buscar lectura por id: {}", id);
 	    try {
-	        Optional<DireccionEntity> direccion = direccionRepository.findById(id);
-	        if (direccion.isPresent()) {
-	        	DireccionDTO dto = direccionMapper.entityToDto(direccion.get());
+	        Optional<LecturaEntity> lectura = lecturaRepository.findById(id);
+	        if (lectura.isPresent()) {
+	        	LecturaDTO dto = lecturaMapper.entityToDto(lectura.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -132,7 +113,7 @@ public class DireccionServiceImpl implements IDireccionService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar direccion por id: {}", id, e);
+	        log.error("Error al buscar lectura por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -144,10 +125,10 @@ public class DireccionServiceImpl implements IDireccionService {
 
     @Override
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todas las direcciones");
+        log.info("Listar todas las lecturas");
         try {
-            var list = direccionRepository.findAll();
-            var dtoList = direccionMapper.listEntityToDtoList(list);
+            var list = lecturaRepository.findAll();
+            var dtoList = lecturaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -156,7 +137,7 @@ public class DireccionServiceImpl implements IDireccionService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar las direcciones", e);
+            log.error("Error al listar las lecturas", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -169,9 +150,9 @@ public class DireccionServiceImpl implements IDireccionService {
 
     @Override
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar direccion por id: {}", id);
+        log.info("Inicio método para eliminar lectura por id: {}", id);
         try {
-            if (!direccionRepository.existsById(id)) {
+            if (!lecturaRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -179,7 +160,7 @@ public class DireccionServiceImpl implements IDireccionService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            direccionRepository.deleteById(id);
+            lecturaRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -187,7 +168,7 @@ public class DireccionServiceImpl implements IDireccionService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar la direccion con id: {}", id, e);
+            log.error("Error al eliminar la lectura con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)
