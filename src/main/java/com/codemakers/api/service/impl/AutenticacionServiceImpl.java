@@ -5,7 +5,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.codemakers.api.config.InvalidCredentialsException;
 import com.codemakers.api.config.JwtUtil;
+import com.codemakers.api.config.UserNotFoundException;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.entities.UsuarioEntity;
 import com.codemakers.commons.repositories.UsuarioRepository;
@@ -18,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author nicope
  * @version 1.0
  * 
- *          Clase que implementa la interfaz de la lógica de negocio.
+ *          Clase que implementa lógica de autenticado.
  */
 
 @Service
@@ -32,18 +34,18 @@ public class AutenticacionServiceImpl {
 
     public ResponseEntity<ResponseDTO> login(String username, String password) {
         try {
-            UsuarioEntity usuario = usuarioRepository.findByNombre(username)
-                    .orElseThrow(() -> new RuntimeException(Constantes.RECORD_NOT_FOUND));
+        	UsuarioEntity usuario = usuarioRepository.findByNombre(username)
+        		    .orElseThrow(() -> new UserNotFoundException(Constantes.RECORD_NOT_FOUND));
 
-            if (!passwordEncoder.matches(password, usuario.getContrasena())) {
-                throw new RuntimeException(Constantes.INVALID_CREDENTIALS);
-            }
+        		if (!passwordEncoder.matches(password, usuario.getContrasena())) {
+        		    throw new InvalidCredentialsException(Constantes.INVALID_CREDENTIALS);
+        		}
 
             String token = jwtUtil.generateToken(usuario.getNombre());
 
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
-                    .message("Autenticación exitosa")
+                    .message(Constantes.AUTHENTICATION_SUCCESSFULLY)
                     .code(HttpStatus.OK.value())
                     .response("Bearer " + token)
                     .build();
@@ -61,7 +63,7 @@ public class AutenticacionServiceImpl {
         } catch (Exception e) {
             ResponseDTO errorDTO = ResponseDTO.builder()
                     .success(false)
-                    .message("Error inesperado al autenticar")
+                    .message(Constantes.AUTHENTICATION_ERROR)
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build();
 
