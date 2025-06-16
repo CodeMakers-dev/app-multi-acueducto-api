@@ -7,53 +7,46 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.codemakers.api.service.ITipoDocumentoService;
+import com.codemakers.api.service.IParametrosGeneralesService;
+import com.codemakers.commons.dtos.ParametrosGeneralesDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TipoDocumentoDTO;
-import com.codemakers.commons.entities.TipoDocumentoEntity;
-import com.codemakers.commons.maps.TipoDocumentoMapper;
-import com.codemakers.commons.repositories.TipoDocumentoRepository;
+import com.codemakers.commons.entities.ParametrosGeneralesEntity;
+import com.codemakers.commons.maps.ParametrosGeneralesMapper;
+import com.codemakers.commons.repositories.ParametrosGeneralesRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @author nicope
- * @version 1.0
- * 
- *          Clase que implementa la interfaz de la lógica de negocio.
- */
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
-
-	private final TipoDocumentoRepository tipoDocumentoRepository;
-	private final TipoDocumentoMapper tipoDocumentoMapper;
+public class ParametrosGeneralesServiceImpl implements IParametrosGeneralesService{
+	
+	private final ParametrosGeneralesRepository parametrosGeneralesRepository;
+	private final ParametrosGeneralesMapper parametrosGeneralesMapper;
 	
 	@Override
-	public ResponseEntity<ResponseDTO> save(TipoDocumentoDTO tipoDocumentoDTO) {
-	    log.info("Guardar/Actualizar Tipo de Documento");
+	public ResponseEntity<ResponseDTO> save(ParametrosGeneralesDTO parametrosGeneralesDTO) {
+	    log.info("Guardar/Actualizar Parametros Generales");
 	    try {
-	        boolean isUpdate = tipoDocumentoDTO.getId() != null && tipoDocumentoRepository.existsById(tipoDocumentoDTO.getId());
-	        TipoDocumentoEntity entity;
+	        boolean isUpdate = parametrosGeneralesDTO.getId() != null && parametrosGeneralesRepository.existsById(parametrosGeneralesDTO.getId());
+	        ParametrosGeneralesEntity entity;
 
 	        if (isUpdate) {
-	            entity = tipoDocumentoRepository.findById(tipoDocumentoDTO.getId()).orElseThrow();
-	            tipoDocumentoMapper.updateEntityFromDto(tipoDocumentoDTO, entity);
+	            entity = parametrosGeneralesRepository.findById(parametrosGeneralesDTO.getId()).orElseThrow();
+	            parametrosGeneralesMapper.updateEntityFromDto(parametrosGeneralesDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(tipoDocumentoDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(parametrosGeneralesDTO.getUsuarioModificacion());
 	        } else {
-	            entity = tipoDocumentoMapper.dtoToEntity(tipoDocumentoDTO);
+	            entity = parametrosGeneralesMapper.dtoToEntity(parametrosGeneralesDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(tipoDocumentoDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(parametrosGeneralesDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TipoDocumentoEntity saved = tipoDocumentoRepository.save(entity);
-	        TipoDocumentoDTO savedDTO = tipoDocumentoMapper.entityToDto(saved);
+	        ParametrosGeneralesEntity saved = parametrosGeneralesRepository.save(entity);
+	        ParametrosGeneralesDTO savedDTO = parametrosGeneralesMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -68,7 +61,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el tipo de documento", e);
+	        log.error("Error guardando Parametros Generales", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -81,11 +74,11 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar tipo de documento por id: {}", id);
+	    log.info("Buscar Parametros Generales por id: {}", id);
 	    try {
-	        Optional<TipoDocumentoEntity> tipoDocumento = tipoDocumentoRepository.findById(id);
-	        if (tipoDocumento.isPresent()) {
-	        	TipoDocumentoDTO dto = tipoDocumentoMapper.entityToDto(tipoDocumento.get());
+	        Optional<ParametrosGeneralesEntity> parametrosGenerales = parametrosGeneralesRepository.findById(id);
+	        if (parametrosGenerales.isPresent()) {
+	        	ParametrosGeneralesDTO dto = parametrosGeneralesMapper.entityToDto(parametrosGenerales.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -102,7 +95,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar tipo documento por id: {}", id, e);
+	        log.error("Error al buscar Parametros Generales por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -114,10 +107,10 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
     @Override
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los tipos de documentos");
+        log.info("Listar todos los Parametros Generales");
         try {
-            var list = tipoDocumentoRepository.findAll();
-            var dtoList = tipoDocumentoMapper.listEntityToDtoList(list);
+            var list = parametrosGeneralesRepository.findAll();
+            var dtoList = parametrosGeneralesMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -126,7 +119,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar los tipos de documentos", e);
+            log.error("Error al listar los Parametros Generales", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -139,9 +132,9 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
     @Override
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar tipo de documento por id: {}", id);
+        log.info("Inicio método para eliminar Parametros Generales por id: {}", id);
         try {
-            if (!tipoDocumentoRepository.existsById(id)) {
+            if (!parametrosGeneralesRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -149,7 +142,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            tipoDocumentoRepository.deleteById(id);
+            parametrosGeneralesRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -157,7 +150,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar el tipo de documento con id: {}", id, e);
+            log.error("Error al eliminar Parametros Generales con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)
