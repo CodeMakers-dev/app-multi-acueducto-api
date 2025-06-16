@@ -42,7 +42,7 @@ public class TarifaServiceImpl implements ITarifaService{
 	
 	@Override
     public ResponseEntity<ResponseDTO> save(TarifaDTO tarifaDTO) {
-        log.info("Guardar/Actualizar usuario");
+        log.info("Guardar/Actualizar tarifa");
         try {
             boolean isUpdate = tarifaDTO.getId() != null && tarifaRepository.existsById(tarifaDTO.getId());
             TarifaEntity entity;

@@ -7,53 +7,58 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.codemakers.api.service.ITipoDocumentoService;
+import com.codemakers.api.service.ICorreoPersonaService;
+import com.codemakers.commons.dtos.CorreoPersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TipoDocumentoDTO;
-import com.codemakers.commons.entities.TipoDocumentoEntity;
-import com.codemakers.commons.maps.TipoDocumentoMapper;
-import com.codemakers.commons.repositories.TipoDocumentoRepository;
+import com.codemakers.commons.entities.CorreoPersonaEntity;
+import com.codemakers.commons.maps.CorreoPersonaMapper;
+import com.codemakers.commons.repositories.CorreoPersonaRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * @author nicope
- * @version 1.0
- * 
- *          Clase que implementa la interfaz de la lógica de negocio.
- */
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
-
-	private final TipoDocumentoRepository tipoDocumentoRepository;
-	private final TipoDocumentoMapper tipoDocumentoMapper;
+public class CorreoPersonaServiceImpl implements ICorreoPersonaService{
+	
+	private final CorreoPersonaRepository correoPersonaRepository;
+	private final CorreoPersonaMapper correoPersonaMapper;
 	
 	@Override
-	public ResponseEntity<ResponseDTO> save(TipoDocumentoDTO tipoDocumentoDTO) {
-	    log.info("Guardar/Actualizar Tipo de Documento");
+	public ResponseEntity<ResponseDTO> save(CorreoPersonaDTO correoPersonaDTO) {
+	    log.info("Guardar/Actualizar Correo Persona");
 	    try {
-	        boolean isUpdate = tipoDocumentoDTO.getId() != null && tipoDocumentoRepository.existsById(tipoDocumentoDTO.getId());
-	        TipoDocumentoEntity entity;
+	        boolean isUpdate = correoPersonaDTO.getId() != null && correoPersonaRepository.existsById(correoPersonaDTO.getId());
 
+	        Optional<CorreoPersonaEntity> existingCorreo = correoPersonaRepository.findByCorreoIgnoreCase(correoPersonaDTO.getCorreo());
+
+	        if (existingCorreo.isPresent()) {
+	            if (!isUpdate || !existingCorreo.get().getId().equals(correoPersonaDTO.getId())) {
+	                ResponseDTO errorResponse = ResponseDTO.builder()
+	                        .success(false)
+	                        .message("El correo '" + correoPersonaDTO.getCorreo() + "' ya se encuentra registrado.")
+	                        .code(HttpStatus.BAD_REQUEST.value())
+	                        .build();
+	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	            }
+	        }
+	        CorreoPersonaEntity entity;
 	        if (isUpdate) {
-	            entity = tipoDocumentoRepository.findById(tipoDocumentoDTO.getId()).orElseThrow();
-	            tipoDocumentoMapper.updateEntityFromDto(tipoDocumentoDTO, entity);
+	            entity = correoPersonaRepository.findById(correoPersonaDTO.getId()).orElseThrow();
+	            correoPersonaMapper.updateEntityFromDto(correoPersonaDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(tipoDocumentoDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(correoPersonaDTO.getUsuarioModificacion());
 	        } else {
-	            entity = tipoDocumentoMapper.dtoToEntity(tipoDocumentoDTO);
+	            entity = correoPersonaMapper.dtoToEntity(correoPersonaDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(tipoDocumentoDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(correoPersonaDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TipoDocumentoEntity saved = tipoDocumentoRepository.save(entity);
-	        TipoDocumentoDTO savedDTO = tipoDocumentoMapper.entityToDto(saved);
+	        CorreoPersonaEntity saved = correoPersonaRepository.save(entity);
+	        CorreoPersonaDTO savedDTO = correoPersonaMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -68,7 +73,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el tipo de documento", e);
+	        log.error("Error guardando el Correo Persona", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -81,11 +86,11 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar tipo de documento por id: {}", id);
+	    log.info("Buscar Correo Persona por id: {}", id);
 	    try {
-	        Optional<TipoDocumentoEntity> tipoDocumento = tipoDocumentoRepository.findById(id);
-	        if (tipoDocumento.isPresent()) {
-	        	TipoDocumentoDTO dto = tipoDocumentoMapper.entityToDto(tipoDocumento.get());
+	        Optional<CorreoPersonaEntity> correoPersona = correoPersonaRepository.findById(id);
+	        if (correoPersona.isPresent()) {
+	        	CorreoPersonaDTO dto = correoPersonaMapper.entityToDto(correoPersona.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -102,7 +107,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar tipo documento por id: {}", id, e);
+	        log.error("Error al buscar Correo Persona por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -114,10 +119,10 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
     @Override
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los tipos de documentos");
+        log.info("Listar todos los Correo Persona");
         try {
-            var list = tipoDocumentoRepository.findAll();
-            var dtoList = tipoDocumentoMapper.listEntityToDtoList(list);
+            var list = correoPersonaRepository.findAll();
+            var dtoList = correoPersonaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -126,7 +131,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar los tipos de documentos", e);
+            log.error("Error al listar los Correo Persona", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -139,9 +144,9 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
 
     @Override
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar tipo de documento por id: {}", id);
+        log.info("Inicio método para eliminar Correo Persona por id: {}", id);
         try {
-            if (!tipoDocumentoRepository.existsById(id)) {
+            if (!correoPersonaRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -149,7 +154,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            tipoDocumentoRepository.deleteById(id);
+            correoPersonaRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -157,7 +162,7 @@ public class TipoDocumentoServiceImpl implements ITipoDocumentoService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar el tipo de documento con id: {}", id, e);
+            log.error("Error al eliminar el Correo Persona con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)
