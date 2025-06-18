@@ -1,8 +1,6 @@
 package com.codemakers.api.controller;
 
 import org.springframework.http.ResponseEntity;
-
-
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,12 +12,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.AutenticacionServiceImpl;
-import com.codemakers.api.service.impl.UsuarioServiceImpl;
-import com.codemakers.commons.dtos.LoginRequestDTO;
+import com.codemakers.api.service.impl.RutaEmpleadoServiceImpl;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.UpdatePasswordDTO;
-import com.codemakers.commons.dtos.UsuarioDTO;
+import com.codemakers.commons.dtos.RutaEmpleadoDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,42 +24,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-/**
- * @author nicope
- * @version 1.0
- * 
- *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Usuario).
- */
-
 @RestController
-@RequestMapping("/api/v1/Usuario")
-@Tag(name = "Usuario - Controller", description = "Controller encargado de gestionar las operaciones de los usuarios")
+@RequestMapping("/api/v1/RutaEmpleado")
+@Tag(name = "RutaEmpleado - Controller", description = "Controller encargado de gestionar las operaciones de la Ruta Empleado")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class UsuarioController {
-
-	private final UsuarioServiceImpl usuarioServiceImpl;
-	private final AutenticacionServiceImpl autenticacionServiceImpl;
+public class RutaEmpleadoController {
+    
+	private final RutaEmpleadoServiceImpl rutaEmpleadoServiceImpl;
 	
-	@Operation(summary = "Autenticar Usuario")
-	@ApiResponses(value = {
-	        @ApiResponse(responseCode = "200", description = "Autenticación exitosa", content = {
-	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-	        @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = {
-	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-	        @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = {
-	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-	        @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
-	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-	})
-	@PostMapping("/Autentication")
-	public ResponseEntity<ResponseDTO> autenticacion(@RequestBody LoginRequestDTO request) {
-	    return autenticacionServiceImpl.autentication(request.getUsername(), request.getPassword());
-	}
-	
-	@Operation(summary = "Guardar o actualizar usuario")
+	@Operation(summary = "Guardar  Ruta Empleado")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -78,11 +48,11 @@ public class UsuarioController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody UsuarioDTO usuarioDTO) {
-        return usuarioServiceImpl.save(usuarioDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody RutaEmpleadoDTO rutaEmpleadoDTO) {
+        return rutaEmpleadoServiceImpl.save(rutaEmpleadoDTO);
     }
 
-    @Operation(summary = "Buscar usuario por id")
+    @Operation(summary = "Buscar Ruta Empleado por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -95,10 +65,10 @@ public class UsuarioController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return usuarioServiceImpl.findById(id);
+        return rutaEmpleadoServiceImpl.findById(id);
     }
 
-    @Operation(summary = "Listar todas las usuario")
+    @Operation(summary = "Listar todos las Ruta Empleado")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -111,40 +81,38 @@ public class UsuarioController {
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return usuarioServiceImpl.findAll();
+        return rutaEmpleadoServiceImpl.findAll();
     }
 
-    @Operation(summary = "Eliminar  usuario por id ")
+    @Operation(summary = "Eliminar Ruta Empleado por id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+            @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+            @ApiResponse(responseCode = "404", description = "Rol no encontrado", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return usuarioServiceImpl.deleteById(id);
+        return rutaEmpleadoServiceImpl.deleteById(id);
     }
     
-    @Operation(summary = "Actualizar password por id usuario ")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
-    })
-    @PutMapping("/Password/{id}")
-    public ResponseEntity<ResponseDTO> actualizarContrasena(
-            @PathVariable Integer id,
-            @RequestBody UpdatePasswordDTO dto) {
-        return usuarioServiceImpl.updatePassword(id, dto.getNuevaContrasena(), dto.getUsuarioModificacion());
+    @Operation(summary = "actualizar Ruta Empleado")
+	@ApiResponses(value = {
+	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	        @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+	})
+    @PutMapping
+    public ResponseEntity<ResponseDTO> update(@RequestBody RutaEmpleadoDTO rutaEmpleadoDTO) {
+        return rutaEmpleadoServiceImpl.update(rutaEmpleadoDTO);
     }
 }
