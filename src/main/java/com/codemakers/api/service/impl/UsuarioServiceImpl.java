@@ -189,4 +189,60 @@ public class UsuarioServiceImpl implements IUsuarioService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
     }
+    public ResponseEntity<ResponseDTO> updatePassword(Integer idUsuario, String nuevaContrasena, String usuarioModificacion) {
+        log.info("Inicio de actualización de contraseña para el usuario con ID: {}", idUsuario);
+
+        try {
+            // Validar contraseña: mínimo 8 caracteres, al menos una mayúscula, minúscula, número y carácter especial
+            String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
+
+            if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {
+                return ResponseEntity.badRequest().body(
+                    ResponseDTO.builder()
+                        .success(false)
+                        .message("La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
+                        .code(HttpStatus.BAD_REQUEST.value())
+                        .build()
+                );
+            }
+
+            Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(idUsuario);
+            if (optionalUsuario.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    ResponseDTO.builder()
+                        .success(false)
+                        .message("Usuario no encontrado")
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build()
+                );
+            }
+
+            UsuarioEntity usuario = optionalUsuario.get();
+            usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+            usuario.setFechaModificacion(new Date());
+            usuario.setUsuarioModificacion(usuarioModificacion);
+
+            usuarioRepository.save(usuario);
+
+            return ResponseEntity.ok(
+                ResponseDTO.builder()
+                    .success(true)
+                    .message("Contraseña actualizada exitosamente")
+                    .code(HttpStatus.OK.value())
+                    .build()
+            );
+
+        } catch (Exception e) {
+            log.error("Error al actualizar la contraseña del usuario con ID: {}", idUsuario, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                ResponseDTO.builder()
+                    .success(false)
+                    .message("Error actualizando la contraseña")
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build()
+            );
+        }
+    }
+
+
 }

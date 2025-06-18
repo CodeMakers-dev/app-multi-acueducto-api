@@ -1,0 +1,183 @@
+package com.codemakers.api.service.impl;
+
+import java.util.Date;
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.codemakers.api.service.IAbonoService;
+import com.codemakers.commons.dtos.AbonoDTO;
+import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.entities.AbonoEntity;
+import com.codemakers.commons.maps.AbonoMapper;
+import com.codemakers.commons.repositories.AbonoRepository;
+import com.codemakers.commons.utils.Constantes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class AbonoServiceImpl implements IAbonoService{
+	
+	private final AbonoRepository abonoRepository;
+	private final AbonoMapper abonoMapper;
+	
+	@Override
+    public ResponseEntity<ResponseDTO> save(AbonoDTO abonoDTO) {
+        log.info("Inicio metodo crear abono");
+        try {
+        	AbonoEntity entity = abonoMapper.dtoToEntity(abonoDTO);
+            entity.setFechaCreacion(new Date());
+            entity.setUsuarioCreacion(abonoDTO.getUsuarioCreacion());
+            entity.setActivo(true);
+
+            AbonoEntity saved = abonoRepository.save(entity);
+            AbonoDTO savedDTO = abonoMapper.entityToDto(saved);
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.SAVED_SUCCESSFULLY)
+                    .code(HttpStatus.CREATED.value())
+                    .response(savedDTO)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+        } catch (Exception e) {
+            log.error("Error creando el abono ", e);
+            ResponseDTO errorResponse = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.SAVE_ERROR)
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    
+    @Override
+    public ResponseEntity<ResponseDTO> update(AbonoDTO abonoDTO) {
+        log.info("inicio metodo Actualizando abono");
+        try {
+            if (abonoDTO.getId() == null || !abonoRepository.existsById(abonoDTO.getId())) {
+                throw new IllegalArgumentException(Constantes.ABONO_NOT_EXIST);
+            }
+
+            AbonoEntity entity = abonoRepository.findById(abonoDTO.getId()).orElseThrow();
+            abonoMapper.updateEntityFromDto(abonoDTO, entity); 
+            entity.setFechaModificacion(new Date());
+            entity.setUsuarioModificacion(abonoDTO.getUsuarioModificacion());
+
+            AbonoEntity updated = abonoRepository.save(entity);
+            AbonoDTO updatedDTO = abonoMapper.entityToDto(updated);
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.UPDATED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(updatedDTO)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
+        } catch (Exception e) {
+            log.error("Error actualizando el abono", e);
+            ResponseDTO errorResponse = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.UPDATE_ERROR)
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+	@Override
+	public ResponseEntity<ResponseDTO> findById(Integer id) {
+	    log.info("Buscar abono por id: {}", id);
+	    try {
+	        Optional<AbonoEntity> abono = abonoRepository.findById(id);
+	        if (abono.isPresent()) {
+	        	AbonoDTO dto = abonoMapper.entityToDto(abono.get());
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(true)
+	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                    .code(HttpStatus.OK.value())
+	                    .response(dto)
+	                    .build();
+	            return ResponseEntity.ok(responseDTO);
+	        } else {
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(false)
+	                    .message(Constantes.CONSULTING_ERROR)
+	                    .code(HttpStatus.NOT_FOUND.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+	        }
+	    } catch (Exception e) {
+	        log.error("Error al buscar  el abono por id: {}", id, e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
+
+    @Override
+    public ResponseEntity<ResponseDTO> findAll() {
+        log.info("Listar todos los abonos");
+        try {
+            var list = abonoRepository.findAll();
+            var dtoList = abonoMapper.listEntityToDtoList(list);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(dtoList)
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al listar los abonos", e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.CONSULTING_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .response(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+
+    @Override
+    public ResponseEntity<ResponseDTO> deleteById(Integer id) {
+        log.info("Inicio método para eliminar abono por id: {}", id);
+        try {
+            if (!abonoRepository.existsById(id)) {
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(false)
+                        .message(Constantes.RECORD_NOT_FOUND)
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+            }
+            abonoRepository.deleteById(id);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.DELETED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al eliminar abono con id: {}", id, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.DELETE_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+}

@@ -1,0 +1,183 @@
+package com.codemakers.api.service.impl;
+
+import java.util.Date;
+import java.util.Optional;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+
+import com.codemakers.api.service.IEmpresaClienteContadorService;
+import com.codemakers.commons.dtos.EmpresaClienteContadorDTO;
+import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.entities.EmpresaClienteContadorEntity;
+import com.codemakers.commons.maps.EmpresaClienteContadorMapper;
+import com.codemakers.commons.repositories.EmpresaClienteContadorRepository;
+import com.codemakers.commons.utils.Constantes;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContadorService{
+	
+	private final EmpresaClienteContadorRepository empresaClienteContadorRepository;
+	private final EmpresaClienteContadorMapper empresaClienteContadorMapper;
+	
+	@Override
+    public ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
+        log.info("Creando Empresa Cliente Contador");
+        try {
+        	EmpresaClienteContadorEntity entity = empresaClienteContadorMapper.dtoToEntity(empresaClienteContadorDTO);
+            entity.setFechaCreacion(new Date());
+            entity.setUsuarioCreacion(empresaClienteContadorDTO.getUsuarioCreacion());
+            entity.setActivo(true);
+
+            EmpresaClienteContadorEntity saved = empresaClienteContadorRepository.save(entity);
+            EmpresaClienteContadorDTO savedDTO = empresaClienteContadorMapper.entityToDto(saved);
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.SAVED_SUCCESSFULLY)
+                    .code(HttpStatus.CREATED.value())
+                    .response(savedDTO)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
+        } catch (Exception e) {
+            log.error("Error creando la Empresa Cliente Contador", e);
+            ResponseDTO errorResponse = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.SAVE_ERROR)
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+    
+    @Override
+    public ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
+        log.info("Actualizando Empresa Cliente Contador");
+        try {
+            if (empresaClienteContadorDTO.getId() == null || !empresaClienteContadorRepository.existsById(empresaClienteContadorDTO.getId())) {
+                throw new IllegalArgumentException("La Empresa Cliente Contador no existe.");
+            }
+
+            EmpresaClienteContadorEntity entity = empresaClienteContadorRepository.findById(empresaClienteContadorDTO.getId()).orElseThrow();
+            empresaClienteContadorMapper.updateEntityFromDto(empresaClienteContadorDTO, entity); 
+            entity.setFechaModificacion(new Date());
+            entity.setUsuarioModificacion(empresaClienteContadorDTO.getUsuarioModificacion());
+
+            EmpresaClienteContadorEntity updated = empresaClienteContadorRepository.save(entity);
+            EmpresaClienteContadorDTO updatedDTO = empresaClienteContadorMapper.entityToDto(updated);
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.UPDATED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(updatedDTO)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.OK).body(responseDTO);
+        } catch (Exception e) {
+            log.error("Error actualizando la Empresa Cliente Contador", e);
+            ResponseDTO errorResponse = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.UPDATE_ERROR)
+                    .code(HttpStatus.BAD_REQUEST.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+        }
+    }
+
+	@Override
+	public ResponseEntity<ResponseDTO> findById(Integer id) {
+	    log.info("Buscar Empresa Cliente Contador por id: {}", id);
+	    try {
+	        Optional<EmpresaClienteContadorEntity> empresaClienteContador = empresaClienteContadorRepository.findById(id);
+	        if (empresaClienteContador.isPresent()) {
+	        	EmpresaClienteContadorDTO dto = empresaClienteContadorMapper.entityToDto(empresaClienteContador.get());
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(true)
+	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                    .code(HttpStatus.OK.value())
+	                    .response(dto)
+	                    .build();
+	            return ResponseEntity.ok(responseDTO);
+	        } else {
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(false)
+	                    .message(Constantes.CONSULTING_ERROR)
+	                    .code(HttpStatus.NOT_FOUND.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+	        }
+	    } catch (Exception e) {
+	        log.error("Error al buscar  Empresa Cliente Contador por id: {}", id, e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
+
+    @Override
+    public ResponseEntity<ResponseDTO> findAll() {
+        log.info("Listar todos las Empresa Cliente Contador");
+        try {
+            var list = empresaClienteContadorRepository.findAll();
+            var dtoList = empresaClienteContadorMapper.listEntityToDtoList(list);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(dtoList)
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al listar las Empresa Cliente Contador", e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.CONSULTING_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .response(null)
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+
+    @Override
+    public ResponseEntity<ResponseDTO> deleteById(Integer id) {
+        log.info("Inicio método para eliminar Empresa Cliente Contador por id: {}", id);
+        try {
+            if (!empresaClienteContadorRepository.existsById(id)) {
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(false)
+                        .message(Constantes.RECORD_NOT_FOUND)
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+            }
+            empresaClienteContadorRepository.deleteById(id);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.DELETED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al eliminar Empresa Cliente Contador con id: {}", id, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.DELETE_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+}

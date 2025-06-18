@@ -21,5 +21,6 @@ public interface IUsuarioService {
     ResponseEntity<ResponseDTO> findById(Integer id);
     ResponseEntity<ResponseDTO> findAll();
     ResponseEntity<ResponseDTO> deleteById(Integer id);
+    ResponseEntity<ResponseDTO> updatePassword(Integer idUsuario, String nuevaContrasena, String usuarioModificacion);
     
 }
