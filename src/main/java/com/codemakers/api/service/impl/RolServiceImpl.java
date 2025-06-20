@@ -97,7 +97,7 @@ public class RolServiceImpl implements IRolService {
 	                .build();
 	        return ResponseEntity.ok(responseDTO);
 	    } else {
-	        String notFoundMsg = String.format("Rol no encontrado para el Id: %d", id);
+	        String notFoundMsg = String.format(Constantes.ROL_NOT_FOUND, id);
 	        log.warn(notFoundMsg);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
@@ -139,7 +139,7 @@ public class RolServiceImpl implements IRolService {
 	    log.info("Inicio eliminar rol por id: {}", id);
 	    try {
 	        if (!rolRepository.existsById(id)) {
-	            String notFoundMsg = String.format("Rol no encontrado para el Id: %d", id);
+	            String notFoundMsg = String.format(Constantes.ROL_NOT_FOUND, id);
 	            log.warn(notFoundMsg);
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(false)

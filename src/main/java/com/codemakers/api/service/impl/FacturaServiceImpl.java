@@ -79,7 +79,7 @@ public class FacturaServiceImpl implements IFacturaService{
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
 	                ResponseDTO.builder()
 	                    .success(false)
-	                    .message("Factura no encontrada")
+	                    .message(Constantes.FAC_NOT_FOUND)
 	                    .code(HttpStatus.NOT_FOUND.value())
 	                    .build()
 	            );
@@ -112,7 +112,7 @@ public class FacturaServiceImpl implements IFacturaService{
 	        return ResponseEntity.ok(
 	            ResponseDTO.builder()
 	                .success(true)
-	                .message("Factura actualizada correctamente")
+	                .message(Constantes.FAC_UPD_SUCCESS)
 	                .code(HttpStatus.OK.value())
 	                .response(updatedDTO)
 	                .build()
@@ -123,7 +123,7 @@ public class FacturaServiceImpl implements IFacturaService{
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
 	            ResponseDTO.builder()
 	                .success(false)
-	                .message("Error actualizando la factura")
+	                .message(Constantes.UPD_NOT_FOUND)
 	                .code(HttpStatus.BAD_REQUEST.value())
 	                .build()
 	        );

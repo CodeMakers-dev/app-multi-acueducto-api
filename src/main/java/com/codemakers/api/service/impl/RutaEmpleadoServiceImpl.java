@@ -63,7 +63,7 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
         log.info("Actualizando Ruta Empleado");
         try {
             if (rutaEmpleadoDTO.getId() == null || !rutaEmpleadoRepository.existsById(rutaEmpleadoDTO.getId())) {
-                throw new IllegalArgumentException("La Ruta Empleado no existe.");
+                throw new IllegalArgumentException(Constantes.RUT_NOT_FOUND);
             }
 
             RutaEmpleadoEntity entity = rutaEmpleadoRepository.findById(rutaEmpleadoDTO.getId()).orElseThrow();

@@ -63,7 +63,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
         log.info("Actualizando Empresa");
         try {
             if (empresaDTO.getId() == null || !empresaRepository.existsById(empresaDTO.getId())) {
-                throw new IllegalArgumentException("La empresa no existe.");
+                throw new IllegalArgumentException(Constantes.EMP_NOT_FOUND);
             }
 
             EmpresaEntity entity = empresaRepository.findById(empresaDTO.getId()).orElseThrow();

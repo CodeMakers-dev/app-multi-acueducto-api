@@ -193,7 +193,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
         log.info("Inicio de actualización de contraseña para el usuario con ID: {}", idUsuario);
 
         try {
-            // Validar contraseña: mínimo 8 caracteres, al menos una mayúscula, minúscula, número y carácter especial
+           
             String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
 
             if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {

@@ -59,7 +59,7 @@ public class LecturaServiceImpl implements ILecturaService {
 	        if (lecturaDTO.getContador() != null && lecturaDTO.getContador().getId() != null) {
 	            ContadorEntity contador = contadorRepository
 	                .findById(lecturaDTO.getContador().getId())
-	                .orElseThrow(() -> new RuntimeException("Contador no encontrado"));
+	                .orElseThrow(() -> new RuntimeException(Constantes.CON_NOT_FOUND));
 	            entity.setContador(contador);
 	        }
 

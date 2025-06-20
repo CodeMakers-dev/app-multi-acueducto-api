@@ -27,73 +27,75 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	private final TelefonoPersonaMapper telefonoPersonaMapper;
 	
 	@Override
-	 public ResponseEntity<ResponseDTO> save(TelefonoPersonaDTO telefonoPersonaDTO) {
-        log.info("Guardar/Actualizar Telefono de Persona");
-        try {
-            boolean isUpdate = telefonoPersonaDTO.getId() != null && telefonoPersonaRepository.existsById(telefonoPersonaDTO.getId());
-            TelefonoPersonaEntity entity;
+	public ResponseEntity<ResponseDTO> save(TelefonoPersonaDTO telefonoPersonaDTO) {
+	    log.info("Guardar/Actualizar Telefono de Persona");
+	    try {
+	        boolean isUpdate = telefonoPersonaDTO.getId() != null && telefonoPersonaRepository.existsById(telefonoPersonaDTO.getId());
+	        TelefonoPersonaEntity entity;
 
-            if (isUpdate) {
-                entity = telefonoPersonaRepository.findById(telefonoPersonaDTO.getId())
-                        .orElseThrow(() -> new RuntimeException("TelefonoPersona not found with ID: " + telefonoPersonaDTO.getId())); 
+	        if (isUpdate) {
+	            entity = telefonoPersonaRepository.findById(telefonoPersonaDTO.getId())
+	                    .orElseThrow(() -> new RuntimeException("TelefonoPersona not found with ID: " + telefonoPersonaDTO.getId()));
 
-                if (!entity.getNumero().equals(telefonoPersonaDTO.getNumero())) {
-                    if (telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
-                        log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
-                        ResponseDTO errorResponse = ResponseDTO.builder()
-                                .success(false)
-                                .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR) 
-                                .code(HttpStatus.CONFLICT.value())
-                                .build();
-                        return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-                    }
-                }
+	            if (!entity.getNumero().equals(telefonoPersonaDTO.getNumero()) &&
+	                telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
+	                
+	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
+	                ResponseDTO errorResponse = ResponseDTO.builder()
+	                        .success(false)
+	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
+	                        .code(HttpStatus.CONFLICT.value())
+	                        .build();
+	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	            }
 
-                telefonoPersonaMapper.updateEntityFromDto(telefonoPersonaDTO, entity);
-                entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(telefonoPersonaDTO.getUsuarioModificacion());
-            } else {
-                if (telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
-                    log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
-                    ResponseDTO errorResponse = ResponseDTO.builder()
-                            .success(false)
-                            .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR) 
-                            .code(HttpStatus.CONFLICT.value())
-                            .build();
-                    return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-                }
-                entity = telefonoPersonaMapper.dtoToEntity(telefonoPersonaDTO);
-                entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(telefonoPersonaDTO.getUsuarioCreacion());
-                entity.setActivo(true);
-            }
+	            telefonoPersonaMapper.updateEntityFromDto(telefonoPersonaDTO, entity);
+	            entity.setFechaModificacion(new Date());
+	            entity.setUsuarioModificacion(telefonoPersonaDTO.getUsuarioModificacion());
+	        } else {
+	            if (telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
+	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
+	                ResponseDTO errorResponse = ResponseDTO.builder()
+	                        .success(false)
+	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
+	                        .code(HttpStatus.CONFLICT.value())
+	                        .build();
+	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	            }
 
-            TelefonoPersonaEntity saved = telefonoPersonaRepository.save(entity);
-            TelefonoPersonaDTO savedDTO = telefonoPersonaMapper.entityToDto(saved);
+	            entity = telefonoPersonaMapper.dtoToEntity(telefonoPersonaDTO);
+	            entity.setFechaCreacion(new Date());
+	            entity.setUsuarioCreacion(telefonoPersonaDTO.getUsuarioCreacion());
+	            entity.setActivo(true);
+	        }
 
-            String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
-            int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
+	        TelefonoPersonaEntity saved = telefonoPersonaRepository.save(entity);
+	        TelefonoPersonaDTO savedDTO = telefonoPersonaMapper.entityToDto(saved);
 
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(message)
-                    .code(statusCode)
-                    .response(savedDTO)
-                    .build();
+	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
+	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
 
-            return ResponseEntity.status(statusCode).body(responseDTO);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(message)
+	                .code(statusCode)
+	                .response(savedDTO)
+	                .build();
 
-        } catch (Exception e) {
-            log.error("Error guardando el Telefono de Persona", e);
-            ResponseDTO errorResponse = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.SAVE_ERROR)
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .build();
+	        return ResponseEntity.status(statusCode).body(responseDTO);
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+	    } catch (Exception e) {
+	        log.error("Error guardando el Telefono de Persona", e);
+	        ResponseDTO errorResponse = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.SAVE_ERROR)
+	                .code(HttpStatus.BAD_REQUEST.value())
+	                .build();
+
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	    }
+	}
+
 
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {

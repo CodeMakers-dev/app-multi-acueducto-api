@@ -64,21 +64,21 @@ public class ContadorServiceImpl implements IContadorService {
 	        if (contadorDTO.getCliente() != null && contadorDTO.getCliente().getId() != null) {
 	            PersonaEntity cliente = personaRepository
 	                .findById(contadorDTO.getCliente().getId())
-	                .orElseThrow(() -> new RuntimeException("Cliente no encontrado"));
+	                .orElseThrow(() -> new RuntimeException(Constantes.CLIENT_NOT_FOUND));
 	            entity.setCliente(cliente);
 	        }
 	        
 	        if (contadorDTO.getTipoContador() != null && contadorDTO.getTipoContador().getId() != null) {
 	            TipoContadorEntity tipoContador = tipoContadorRepository
 	                .findById(contadorDTO.getTipoContador().getId())
-	                .orElseThrow(() -> new RuntimeException("Tipo de contador no encontrado"));
+	                .orElseThrow(() -> new RuntimeException(Constantes.COUND_NOT_FOUND));
 	            entity.setTipoContador(tipoContador);
 	        }
 
 	        if (contadorDTO.getDescripcion() != null && contadorDTO.getDescripcion().getId() != null) {
 	            DireccionEntity direccion = direccionRepository
 	                .findById(contadorDTO.getDescripcion().getId())
-	                .orElseThrow(() -> new RuntimeException("Direccion no encontrada"));
+	                .orElseThrow(() -> new RuntimeException(Constantes.DIREC_NOT_FOUND));
 	            entity.setDescripcion(direccion);
 	        }
 
