@@ -63,9 +63,8 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
         log.info("Actualizando Empresa Cliente Contador");
         try {
             if (empresaClienteContadorDTO.getId() == null || !empresaClienteContadorRepository.existsById(empresaClienteContadorDTO.getId())) {
-                throw new IllegalArgumentException("La Empresa Cliente Contador no existe.");
+                throw new IllegalArgumentException(Constantes.ECC_NOT_FOUND);
             }
-
             EmpresaClienteContadorEntity entity = empresaClienteContadorRepository.findById(empresaClienteContadorDTO.getId()).orElseThrow();
             empresaClienteContadorMapper.updateEntityFromDto(empresaClienteContadorDTO, entity); 
             entity.setFechaModificacion(new Date());

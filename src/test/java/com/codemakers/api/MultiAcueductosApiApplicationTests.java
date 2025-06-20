@@ -8,6 +8,7 @@ class MultiAcueductosApiApplicationTests {
 
 	@Test
 	void contextLoads() {
+		  // Método de prueba vacío intencionalmente para verificar que el contexto se carga sin errores
 	}
 
 }

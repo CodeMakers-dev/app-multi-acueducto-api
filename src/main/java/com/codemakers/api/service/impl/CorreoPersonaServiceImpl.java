@@ -34,16 +34,15 @@ public class CorreoPersonaServiceImpl implements ICorreoPersonaService{
 
 	        Optional<CorreoPersonaEntity> existingCorreo = correoPersonaRepository.findByCorreoIgnoreCase(correoPersonaDTO.getCorreo());
 
-	        if (existingCorreo.isPresent()) {
-	            if (!isUpdate || !existingCorreo.get().getId().equals(correoPersonaDTO.getId())) {
-	                ResponseDTO errorResponse = ResponseDTO.builder()
-	                        .success(false)
-	                        .message("El correo '" + correoPersonaDTO.getCorreo() + "' ya se encuentra registrado.")
-	                        .code(HttpStatus.BAD_REQUEST.value())
-	                        .build();
-	                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-	            }
+	        if (existingCorreo.isPresent() && (!isUpdate || !existingCorreo.get().getId().equals(correoPersonaDTO.getId()))) {
+	            ResponseDTO errorResponse = ResponseDTO.builder()
+	                    .success(false)
+	                    .message("El correo '" + correoPersonaDTO.getCorreo() + "' ya se encuentra registrado.")
+	                    .code(HttpStatus.BAD_REQUEST.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	        }
+
 	        CorreoPersonaEntity entity;
 	        if (isUpdate) {
 	            entity = correoPersonaRepository.findById(correoPersonaDTO.getId()).orElseThrow();
@@ -83,6 +82,7 @@ public class CorreoPersonaServiceImpl implements ICorreoPersonaService{
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	    }
 	}
+
 
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {

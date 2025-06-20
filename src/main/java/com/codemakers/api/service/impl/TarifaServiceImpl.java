@@ -61,12 +61,12 @@ public class TarifaServiceImpl implements ITarifaService{
 
             if (tarifaDTO.getEmpresa() != null && tarifaDTO.getEmpresa().getId() != null) {
                 EmpresaEntity empresa = empresaRepository.findById(tarifaDTO.getEmpresa().getId())
-                    .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
+                    .orElseThrow(() -> new RuntimeException(Constantes.EMP_NOT_FOUND));
                 entity.setEmpresa(empresa);
             }
             if (tarifaDTO.getTipoTarifa() != null && tarifaDTO.getTipoTarifa().getId() != null) {
                 TipoTarifaEntity tipoTarifa = tipoTarifaRepository.findById(tarifaDTO.getTipoTarifa().getId())
-                    .orElseThrow(() -> new RuntimeException("Tipo tarifa no encontrada"));
+                    .orElseThrow(() -> new RuntimeException(Constantes.TIP_NOT_FOUND));
                 entity.setTipoTarifa(tipoTarifa);
             }
 

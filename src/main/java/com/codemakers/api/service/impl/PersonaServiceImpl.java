@@ -65,7 +65,7 @@ public class PersonaServiceImpl implements IPersonaService {
             }
             if (personaDTO.getTipoDocumento() != null && personaDTO.getTipoDocumento().getId() != null) {
                 TipoDocumentoEntity tipoDocumento = tipoDocumentoRepository.findById(personaDTO.getTipoDocumento().getId())
-                    .orElseThrow(() -> new RuntimeException("Tipo de documento no encontrado"));
+                    .orElseThrow(() -> new RuntimeException(Constantes.TD_NOT_FOUND));
                 entity.setTipoDocumento(tipoDocumento);
             }
 
