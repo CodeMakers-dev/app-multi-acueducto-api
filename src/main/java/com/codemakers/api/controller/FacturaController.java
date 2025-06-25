@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,7 +37,7 @@ public class FacturaController {
 	
     private final FacturaServiceImpl facturaServiceImpl;
 	
-	@Operation(summary = "Guardar  Factura")
+	@Operation(summary = "Guardar Factura")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -114,5 +117,27 @@ public class FacturaController {
     @PutMapping
     public ResponseEntity<ResponseDTO> update(@RequestBody FacturaDTO facturaDTO) {
         return facturaServiceImpl.update(facturaDTO);
+    }
+    
+    @Operation(summary = "Generar Factura")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operación completada exitosamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }), // Schema reflects Map
+            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis o validación", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @PostMapping("/generar")
+    public ResponseEntity<Map<String, Object>> generarFactura(
+            @RequestBody Map<String, Object> jsonParams) {
+
+        try {
+            Map<String, Object> resultFromService = facturaServiceImpl.generarFactura(jsonParams);
+            return ResponseEntity.ok(resultFromService);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(Map.of("error", "Error en la operación del controlador: " + e.getMessage()));
+        }
     }
 }
