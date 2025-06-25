@@ -1,11 +1,17 @@
 package com.codemakers.api.service.impl;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IFacturaService;
 import com.codemakers.commons.dtos.FacturaDTO;
@@ -19,6 +25,9 @@ import com.codemakers.commons.maps.TarifaMapper;
 import com.codemakers.commons.maps.TipoPagoMapper;
 import com.codemakers.commons.repositories.FacturaRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +44,8 @@ public class FacturaServiceImpl implements IFacturaService{
 	private final LecturaMapper lecturaMapper;
 	private final TipoPagoMapper tipoPagoMapper;
 	private final EstadoMapper estadoMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final ObjectMapper objectMapper;
 	
 	@Override
     public ResponseEntity<ResponseDTO> save(FacturaDTO facturaDTO) {
@@ -218,4 +229,45 @@ public class FacturaServiceImpl implements IFacturaService{
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
     }
+    
+    
+    /**
+     * Genera una factura a partir de los parámetros recibidos en formato JSON.
+     * Llama a un procedimiento almacenado en PostgreSQL y devuelve el resultado deserializado.
+     * 
+     * @author nicope
+     * @version 1.0
+     */
+    
+    @Transactional
+    public Map<String, Object> generarFactura(Map<String, Object> jsonParams) {
+        try {
+            String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+            String sql = "SELECT * FROM public.generar_factura(CAST(:jsonData AS jsonb))";
+            
+            MapSqlParameterSource parameters = new MapSqlParameterSource();
+            parameters.addValue("jsonData", jsonString);
+
+            Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+            // Obtener el campo "value" del resultado
+            Object wrappedValue = rawResult.get("generar_factura");
+            if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+                String jsonValue = pgObject.getValue();
+                // Deserializar a Map
+                return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+            }
+
+            return Map.of(Constantes.ERROR_KEY, Constantes.RESULT_COULD_NOT_PROCESSED);
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.PROCCESSING_ERROR + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.UNEXPECTED_ERROR + e.getMessage());
+        }
+    }
+
 }
