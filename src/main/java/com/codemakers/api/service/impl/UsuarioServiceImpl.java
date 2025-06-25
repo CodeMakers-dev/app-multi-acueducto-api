@@ -42,65 +42,91 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final PasswordEncoder passwordEncoder;
 	
 	@Override
-    public ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO) {
-        log.info("Guardar/Actualizar usuario");
-        try {
-            boolean isUpdate = usuarioDTO.getId() != null && usuarioRepository.existsById(usuarioDTO.getId());
-            UsuarioEntity entity;
+	public ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO) {
+	    log.info("Guardar/Actualizar usuario");
+	    try {
+	        boolean isUpdate = isUpdate(usuarioDTO);
 
-            if (isUpdate) {
-                entity = usuarioRepository.findById(usuarioDTO.getId()).orElseThrow();
-                usuarioMapper.updateEntityFromDto(usuarioDTO, entity);
-                entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
-                if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
-                    entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
-                    }
-            } else {
-                entity = usuarioMapper.dtoToEntity(usuarioDTO);
-                entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
-                entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
-                entity.setActivo(true);
-            }
+	        if (!isUpdate && isDuplicated(usuarioDTO)) {
+	            return buildErrorResponse(Constantes.USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
+	        }
 
-            if (usuarioDTO.getRol() != null && usuarioDTO.getRol().getId() != null) {
-                RolEntity rol = rolRepository.findById(usuarioDTO.getRol().getId())
-                    .orElseThrow(() -> new RuntimeException("Rol no encontrada"));
-                entity.setRol(rol);
-            }
-            if (usuarioDTO.getPersona() != null && usuarioDTO.getPersona().getId() != null) {
-                PersonaEntity persona = personaRepository.findById(usuarioDTO.getPersona().getId())
-                    .orElseThrow(() -> new RuntimeException("Persona no encontrado"));
-                entity.setPersona(persona);
-            }
+	        UsuarioEntity entity = isUpdate
+	                ? updateEntityFromDto(usuarioDTO)
+	                : createEntityFromDto(usuarioDTO);
 
-            UsuarioEntity saved = usuarioRepository.save(entity);
-            UsuarioDTO savedDTO = usuarioMapper.entityToDto(saved);
+	        setRolAndPersona(entity, usuarioDTO);
 
-            String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
-            int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
+	        UsuarioEntity saved = usuarioRepository.save(entity);
+	        UsuarioDTO savedDTO = usuarioMapper.entityToDto(saved);
 
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(message)
-                    .code(statusCode)
-                    .response(savedDTO)
-                    .build();
+	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
+	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
 
-            return ResponseEntity.status(statusCode).body(responseDTO);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(message)
+	                .code(statusCode)
+	                .response(savedDTO)
+	                .build();
 
-        } catch (Exception e) {
-            log.error("Error guardando usuario", e);
-            ResponseDTO errorResponse = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.SAVE_ERROR)
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .build();
+	        return ResponseEntity.status(statusCode).body(responseDTO);
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+	    } catch (Exception e) {
+	        log.error("Error guardando usuario", e);
+	        return buildErrorResponse(Constantes.SAVE_ERROR, HttpStatus.BAD_REQUEST);
+	    }
+	}
+
+	private boolean isUpdate(UsuarioDTO usuarioDTO) {
+	    return usuarioDTO.getId() != null && usuarioRepository.existsById(usuarioDTO.getId());
+	}
+
+	private boolean isDuplicated(UsuarioDTO usuarioDTO) {
+	    return usuarioDTO.getNombre() != null && usuarioRepository.existsByNombre(usuarioDTO.getNombre());
+	}
+
+	private UsuarioEntity updateEntityFromDto(UsuarioDTO usuarioDTO) {
+	    UsuarioEntity entity = usuarioRepository.findById(usuarioDTO.getId()).orElseThrow();
+	    usuarioMapper.updateEntityFromDto(usuarioDTO, entity);
+	    entity.setFechaModificacion(new Date());
+	    entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
+	    if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
+	        entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+	    }
+	    return entity;
+	}
+
+	private UsuarioEntity createEntityFromDto(UsuarioDTO usuarioDTO) {
+	    UsuarioEntity entity = usuarioMapper.dtoToEntity(usuarioDTO);
+	    entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+	    entity.setFechaCreacion(new Date());
+	    entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
+	    entity.setActivo(true);
+	    return entity;
+	}
+
+	private void setRolAndPersona(UsuarioEntity entity, UsuarioDTO usuarioDTO) {
+	    if (usuarioDTO.getRol() != null && usuarioDTO.getRol().getId() != null) {
+	        RolEntity rol = rolRepository.findById(usuarioDTO.getRol().getId())
+	                .orElseThrow(() -> new RuntimeException(Constantes.ROLE_NOT_FOUND));
+	        entity.setRol(rol);
+	    }
+	    if (usuarioDTO.getPersona() != null && usuarioDTO.getPersona().getId() != null) {
+	        PersonaEntity persona = personaRepository.findById(usuarioDTO.getPersona().getId())
+	                .orElseThrow(() -> new RuntimeException(Constantes.PERSON_NOT_FOUND));
+	        entity.setPersona(persona);
+	    }
+	}
+
+	private ResponseEntity<ResponseDTO> buildErrorResponse(String message, HttpStatus status) {
+	    ResponseDTO errorResponse = ResponseDTO.builder()
+	            .success(false)
+	            .message(message)
+	            .code(status.value())
+	            .build();
+	    return ResponseEntity.status(status).body(errorResponse);
+	}
 
     @Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {

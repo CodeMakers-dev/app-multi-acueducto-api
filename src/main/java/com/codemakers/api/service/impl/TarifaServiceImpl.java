@@ -41,61 +41,75 @@ public class TarifaServiceImpl implements ITarifaService{
 	private final TarifaMapper tarifaMapper;
 	
 	@Override
-    public ResponseEntity<ResponseDTO> save(TarifaDTO tarifaDTO) {
-        log.info("Guardar/Actualizar tarifa");
-        try {
-            boolean isUpdate = tarifaDTO.getId() != null && tarifaRepository.existsById(tarifaDTO.getId());
-            TarifaEntity entity;
+	public ResponseEntity<ResponseDTO> save(TarifaDTO tarifaDTO) {
+	    log.info("Guardar/Actualizar tarifa");
+	    try {
+	        boolean isUpdate = tarifaDTO.getId() != null && tarifaRepository.existsById(tarifaDTO.getId());
+	        if (!isUpdate
+	            && tarifaDTO.getEmpresa() != null && tarifaDTO.getEmpresa().getId() != null
+	            && tarifaDTO.getTipoTarifa() != null && tarifaDTO.getTipoTarifa().getId() != null
+	            && tarifaRepository.existsByEmpresaIdAndTipoTarifaId(
+	                tarifaDTO.getEmpresa().getId(), tarifaDTO.getTipoTarifa().getId())
+	        ) {
+	            ResponseDTO errorResponse = ResponseDTO.builder()
+	                    .success(false)
+	                    .message(Constantes.RATE_TYPE_ALREADY_EXISTS)
+	                    .code(HttpStatus.CONFLICT.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
+	        }
 
-            if (isUpdate) {
-                entity = tarifaRepository.findById(tarifaDTO.getId()).orElseThrow();
-                tarifaMapper.updateEntityFromDto(tarifaDTO, entity);
-                entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(tarifaDTO.getUsuarioModificacion());
-            } else {
-                entity = tarifaMapper.dtoToEntity(tarifaDTO);
-                entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(tarifaDTO.getUsuarioCreacion());
-                entity.setActivo(true);
-            }
+	        TarifaEntity entity;
 
-            if (tarifaDTO.getEmpresa() != null && tarifaDTO.getEmpresa().getId() != null) {
-                EmpresaEntity empresa = empresaRepository.findById(tarifaDTO.getEmpresa().getId())
-                    .orElseThrow(() -> new RuntimeException(Constantes.EMP_NOT_FOUND));
-                entity.setEmpresa(empresa);
-            }
-            if (tarifaDTO.getTipoTarifa() != null && tarifaDTO.getTipoTarifa().getId() != null) {
-                TipoTarifaEntity tipoTarifa = tipoTarifaRepository.findById(tarifaDTO.getTipoTarifa().getId())
-                    .orElseThrow(() -> new RuntimeException(Constantes.TIP_NOT_FOUND));
-                entity.setTipoTarifa(tipoTarifa);
-            }
+	        if (isUpdate) {
+	            entity = tarifaRepository.findById(tarifaDTO.getId()).orElseThrow();
+	            tarifaMapper.updateEntityFromDto(tarifaDTO, entity);
+	            entity.setFechaModificacion(new Date());
+	            entity.setUsuarioModificacion(tarifaDTO.getUsuarioModificacion());
+	        } else {
+	            entity = tarifaMapper.dtoToEntity(tarifaDTO);
+	            entity.setFechaCreacion(new Date());
+	            entity.setUsuarioCreacion(tarifaDTO.getUsuarioCreacion());
+	            entity.setActivo(true);
+	        }
 
-            TarifaEntity saved = tarifaRepository.save(entity);
-            TarifaDTO savedDTO = tarifaMapper.entityToDto(saved);
+	        if (tarifaDTO.getEmpresa() != null && tarifaDTO.getEmpresa().getId() != null) {
+	            EmpresaEntity empresa = empresaRepository.findById(tarifaDTO.getEmpresa().getId())
+	                    .orElseThrow(() -> new RuntimeException(Constantes.EMP_NOT_FOUND));
+	            entity.setEmpresa(empresa);
+	        }
+	        if (tarifaDTO.getTipoTarifa() != null && tarifaDTO.getTipoTarifa().getId() != null) {
+	            TipoTarifaEntity tipoTarifa = tipoTarifaRepository.findById(tarifaDTO.getTipoTarifa().getId())
+	                    .orElseThrow(() -> new RuntimeException(Constantes.TIP_NOT_FOUND));
+	            entity.setTipoTarifa(tipoTarifa);
+	        }
 
-            String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
-            int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
+	        TarifaEntity saved = tarifaRepository.save(entity);
+	        TarifaDTO savedDTO = tarifaMapper.entityToDto(saved);
 
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(message)
-                    .code(statusCode)
-                    .response(savedDTO)
-                    .build();
+	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
+	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
 
-            return ResponseEntity.status(statusCode).body(responseDTO);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(message)
+	                .code(statusCode)
+	                .response(savedDTO)
+	                .build();
 
-        } catch (Exception e) {
-            log.error("Error guardando tarifa", e);
-            ResponseDTO errorResponse = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.SAVE_ERROR)
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .build();
+	        return ResponseEntity.status(statusCode).body(responseDTO);
 
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+	    } catch (Exception e) {
+	        log.error("Error guardando tarifa", e);
+	        ResponseDTO errorResponse = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.SAVE_ERROR)
+	                .code(HttpStatus.BAD_REQUEST.value())
+	                .build();
+
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	    }
+	}
 
     @Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {

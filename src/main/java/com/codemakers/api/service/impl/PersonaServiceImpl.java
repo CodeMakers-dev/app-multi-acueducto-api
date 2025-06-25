@@ -42,32 +42,18 @@ public class PersonaServiceImpl implements IPersonaService {
     @Override
     public ResponseEntity<ResponseDTO> save(PersonaDTO personaDTO) {
         log.info("Guardar/Actualizar persona");
+
         try {
             boolean isUpdate = personaDTO.getId() != null && personaRepository.existsById(personaDTO.getId());
-            PersonaEntity entity;
 
-            if (isUpdate) {
-                entity = personaRepository.findById(personaDTO.getId()).orElseThrow();
-                personaMapper.updateEntityFromDto(personaDTO, entity);
-                entity.setFechaModificacion(new Date());
-                entity.setUsuarioModificacion(personaDTO.getUsuarioModificacion());
-            } else {
-                entity = personaMapper.dtoToEntity(personaDTO);
-                entity.setFechaCreacion(new Date());
-                entity.setUsuarioCreacion(personaDTO.getUsuarioCreacion());
-                entity.setActivo(true);
+            ResponseEntity<ResponseDTO> validationResponse = validatePersonaData(personaDTO, isUpdate);
+            if (validationResponse != null) {
+                return validationResponse;
             }
+            PersonaEntity entity = buildPersonaEntity(personaDTO, isUpdate);
 
-            if (personaDTO.getDireccion() != null && personaDTO.getDireccion().getId() != null) {
-                DireccionEntity direccion = direccionRepository.findById(personaDTO.getDireccion().getId())
-                    .orElseThrow(() -> new RuntimeException("Dirección no encontrada"));
-                entity.setDireccion(direccion);
-            }
-            if (personaDTO.getTipoDocumento() != null && personaDTO.getTipoDocumento().getId() != null) {
-                TipoDocumentoEntity tipoDocumento = tipoDocumentoRepository.findById(personaDTO.getTipoDocumento().getId())
-                    .orElseThrow(() -> new RuntimeException(Constantes.TD_NOT_FOUND));
-                entity.setTipoDocumento(tipoDocumento);
-            }
+            setRelacionDireccion(personaDTO, entity);
+            setRelacionTipoDocumento(personaDTO, entity);
 
             PersonaEntity saved = personaRepository.save(entity);
             PersonaDTO savedDTO = personaMapper.entityToDto(saved);
@@ -75,25 +61,80 @@ public class PersonaServiceImpl implements IPersonaService {
             String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
             int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
 
-            ResponseDTO responseDTO = ResponseDTO.builder()
+            return ResponseEntity.status(statusCode).body(
+                ResponseDTO.builder()
                     .success(true)
                     .message(message)
                     .code(statusCode)
                     .response(savedDTO)
-                    .build();
-
-            return ResponseEntity.status(statusCode).body(responseDTO);
+                    .build()
+            );
 
         } catch (Exception e) {
             log.error("Error guardando persona", e);
-            ResponseDTO errorResponse = ResponseDTO.builder()
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.SAVE_ERROR)
                     .code(HttpStatus.BAD_REQUEST.value())
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+                    .build()
+            );
         }
+    }
+
+    private ResponseEntity<ResponseDTO> validatePersonaData(PersonaDTO personaDTO, boolean isUpdate) {
+        if (!isUpdate) {
+            if (personaDTO.getNumeroCedula() != null && personaRepository.existsByNumeroCedula(personaDTO.getNumeroCedula())) {
+                return buildConflictResponse(Constantes.NUMBER_EXISTS);
+            }
+            if (personaDTO.getNombre() != null && personaRepository.existsByNombre(personaDTO.getNombre())) {
+                return buildConflictResponse(Constantes.PERSON_EXISTS);
+            }
+        }
+        return null;
+    }
+
+    private PersonaEntity buildPersonaEntity(PersonaDTO personaDTO, boolean isUpdate) {
+        PersonaEntity entity;
+
+        if (isUpdate) {
+            entity = personaRepository.findById(personaDTO.getId()).orElseThrow();
+            personaMapper.updateEntityFromDto(personaDTO, entity);
+            entity.setFechaModificacion(new Date());
+            entity.setUsuarioModificacion(personaDTO.getUsuarioModificacion());
+        } else {
+            entity = personaMapper.dtoToEntity(personaDTO);
+            entity.setFechaCreacion(new Date());
+            entity.setUsuarioCreacion(personaDTO.getUsuarioCreacion());
+            entity.setActivo(true);
+        }
+        return entity;
+    }
+
+    private void setRelacionDireccion(PersonaDTO personaDTO, PersonaEntity entity) {
+        if (personaDTO.getDireccion() != null && personaDTO.getDireccion().getId() != null) {
+            DireccionEntity direccion = direccionRepository.findById(personaDTO.getDireccion().getId())
+                .orElseThrow(() -> new RuntimeException(Constantes.DIREC_NOT_FOUND));
+            entity.setDireccion(direccion);
+        }
+    }
+
+    private void setRelacionTipoDocumento(PersonaDTO personaDTO, PersonaEntity entity) {
+        if (personaDTO.getTipoDocumento() != null && personaDTO.getTipoDocumento().getId() != null) {
+            TipoDocumentoEntity tipoDocumento = tipoDocumentoRepository.findById(personaDTO.getTipoDocumento().getId())
+                .orElseThrow(() -> new RuntimeException(Constantes.TD_NOT_FOUND));
+            entity.setTipoDocumento(tipoDocumento);
+        }
+    }
+
+    private ResponseEntity<ResponseDTO> buildConflictResponse(String message) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(
+            ResponseDTO.builder()
+                .success(false)
+                .message(message)
+                .code(HttpStatus.CONFLICT.value())
+                .build()
+        );
     }
 
     @Override
