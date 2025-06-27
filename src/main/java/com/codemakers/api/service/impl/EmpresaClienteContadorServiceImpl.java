@@ -27,37 +27,52 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	private final EmpresaClienteContadorMapper empresaClienteContadorMapper;
 	
 	@Override
-    public ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
-        log.info("Creando Empresa Cliente Contador");
-        try {
-        	EmpresaClienteContadorEntity entity = empresaClienteContadorMapper.dtoToEntity(empresaClienteContadorDTO);
-            entity.setFechaCreacion(new Date());
-            entity.setUsuarioCreacion(empresaClienteContadorDTO.getUsuarioCreacion());
-            entity.setActivo(true);
+	public ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
+	    log.info("Creando Empresa Cliente Contador");
+	    try {
+	        boolean existe = empresaClienteContadorRepository.existsByEmpresaIdAndClienteIdAndContadorId(
+	                empresaClienteContadorDTO.getEmpresa().getId(),
+	                empresaClienteContadorDTO.getCliente().getId(),
+	                empresaClienteContadorDTO.getContador().getId()
+	        );
 
-            EmpresaClienteContadorEntity saved = empresaClienteContadorRepository.save(entity);
-            EmpresaClienteContadorDTO savedDTO = empresaClienteContadorMapper.entityToDto(saved);
+	        if (existe) {
+	            return ResponseEntity.status(HttpStatus.CONFLICT).body(
+	                    ResponseDTO.builder()
+	                            .success(false)
+	                            .message(Constantes.EMCL_EXISTS)
+	                            .code(HttpStatus.CONFLICT.value())
+	                            .build()
+	            );
+	        }
+	        EmpresaClienteContadorEntity entity = empresaClienteContadorMapper.dtoToEntity(empresaClienteContadorDTO);
+	        entity.setFechaCreacion(new Date());
+	        entity.setUsuarioCreacion(empresaClienteContadorDTO.getUsuarioCreacion());
+	        entity.setActivo(true);
 
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.SAVED_SUCCESSFULLY)
-                    .code(HttpStatus.CREATED.value())
-                    .response(savedDTO)
-                    .build();
+	        EmpresaClienteContadorEntity saved = empresaClienteContadorRepository.save(entity);
+	        EmpresaClienteContadorDTO savedDTO = empresaClienteContadorMapper.entityToDto(saved);
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(responseDTO);
-        } catch (Exception e) {
-            log.error("Error creando la Empresa Cliente Contador", e);
-            ResponseDTO errorResponse = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.SAVE_ERROR)
-                    .code(HttpStatus.BAD_REQUEST.value())
-                    .build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
-        }
-    }
+	        return ResponseEntity.status(HttpStatus.CREATED).body(
+	                ResponseDTO.builder()
+	                        .success(true)
+	                        .message(Constantes.SAVED_SUCCESSFULLY)
+	                        .code(HttpStatus.CREATED.value())
+	                        .response(savedDTO)
+	                        .build()
+	        );
 
-    
+	    } catch (Exception e) {
+	        log.error("Error creando la Empresa Cliente Contador", e);
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+	                ResponseDTO.builder()
+	                        .success(false)
+	                        .message(Constantes.SAVE_ERROR)
+	                        .code(HttpStatus.BAD_REQUEST.value())
+	                        .build()
+	        );
+	    }
+	}
     @Override
     public ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
         log.info("Actualizando Empresa Cliente Contador");
