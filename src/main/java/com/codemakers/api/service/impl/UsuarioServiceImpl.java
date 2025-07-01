@@ -8,13 +8,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.codemakers.api.config.JwtUtil;
 import com.codemakers.api.service.IUsuarioService;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
+import com.codemakers.commons.entities.CorreoPersonaEntity;
 import com.codemakers.commons.entities.PersonaEntity;
 import com.codemakers.commons.entities.RolEntity;
 import com.codemakers.commons.entities.UsuarioEntity;
 import com.codemakers.commons.maps.UsuarioMapper;
+import com.codemakers.commons.repositories.CorreoPersonaRepository;
 import com.codemakers.commons.repositories.PersonaRepository;
 import com.codemakers.commons.repositories.RolRepository;
 import com.codemakers.commons.repositories.UsuarioRepository;
@@ -36,239 +39,220 @@ import lombok.extern.slf4j.Slf4j;
 public class UsuarioServiceImpl implements IUsuarioService {
 
 	private final UsuarioRepository usuarioRepository;
+	private final CorreoPersonaRepository correoPersonaRepository;
 	private final RolRepository rolRepository;
 	private final PersonaRepository personaRepository;
 	private final UsuarioMapper usuarioMapper;
 	private final PasswordEncoder passwordEncoder;
-	
+	private final EmailServiceImpl emailService;
+	private final JwtUtil jwtUtil;
+
+	public ResponseEntity<ResponseDTO> recoverPassword(String correo) {
+		log.info("Recuperación de contraseña solicitada para: {}", correo);
+
+		try {
+			Optional<CorreoPersonaEntity> correoPersonaOpt = correoPersonaRepository.findByCorreo(correo);
+
+			if (correoPersonaOpt.isEmpty() || correoPersonaOpt.get().getPersona() == null) {
+				return buildErrorResponse(Constantes.EMAIL_NOT_FOUND, HttpStatus.NOT_FOUND);
+			}
+			Integer idPersona = correoPersonaOpt.get().getPersona().getId();
+			Optional<UsuarioEntity> usuarioOpt = usuarioRepository.findByPersonaId(idPersona);
+
+			if (usuarioOpt.isEmpty()) {
+				return buildErrorResponse(Constantes.USER_NOT_ASCIATED, HttpStatus.NOT_FOUND);
+			}
+			UsuarioEntity usuario = usuarioOpt.get();
+			String token = jwtUtil.generateToken(usuario.getNombre());
+			String recoveryLink = "https://tuapp.com/reset-password?token=" + token;
+
+			String subject = "🔐 Recuperación de contraseña";
+			String body = "<p>Hola <strong>" + usuario.getNombre() + "</strong>,</p>"
+					+ "<p>Hemos recibido una solicitud para restablecer tu contraseña.</p>"
+					+ "<p>Haz clic en el siguiente enlace para continuar:</p>" + "<p><a href='" + recoveryLink
+					+ "'>Restablecer contraseña</a></p>" + "<br><p>Este enlace expirará en 10 horas.</p>"
+					+ "<p>Si no hiciste esta solicitud, puedes ignorar este mensaje.</p>";
+
+			emailService.sendEmail(correo, subject, body);
+
+			return ResponseEntity.ok(ResponseDTO.builder().success(true)
+					.message(Constantes.EMAIL_SEND).code(HttpStatus.OK.value()).build());
+
+		} catch (Exception e) {
+			log.error("Error durante la recuperación de contraseña para el correo {}", correo, e);
+			return buildErrorResponse(Constantes.ERROR_APPLICATION, HttpStatus.INTERNAL_SERVER_ERROR);
+		}
+	}
+
 	@Override
 	public ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO) {
-	    log.info("Guardar/Actualizar usuario");
-	    try {
-	        boolean isUpdate = isUpdate(usuarioDTO);
+		log.info("Guardar/Actualizar usuario");
+		try {
+			boolean isUpdate = isUpdate(usuarioDTO);
 
-	        if (!isUpdate && isDuplicated(usuarioDTO)) {
-	            return buildErrorResponse(Constantes.USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
-	        }
+			if (!isUpdate && isDuplicated(usuarioDTO)) {
+				return buildErrorResponse(Constantes.USER_ALREADY_EXISTS, HttpStatus.CONFLICT);
+			}
 
-	        UsuarioEntity entity = isUpdate
-	                ? updateEntityFromDto(usuarioDTO)
-	                : createEntityFromDto(usuarioDTO);
+			UsuarioEntity entity = isUpdate ? updateEntityFromDto(usuarioDTO) : createEntityFromDto(usuarioDTO);
 
-	        setRolAndPersona(entity, usuarioDTO);
+			setRolAndPersona(entity, usuarioDTO);
 
-	        UsuarioEntity saved = usuarioRepository.save(entity);
-	        UsuarioDTO savedDTO = usuarioMapper.entityToDto(saved);
+			UsuarioEntity saved = usuarioRepository.save(entity);
+			UsuarioDTO savedDTO = usuarioMapper.entityToDto(saved);
 
-	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
-	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
+			String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
+			int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
 
-	        ResponseDTO responseDTO = ResponseDTO.builder()
-	                .success(true)
-	                .message(message)
-	                .code(statusCode)
-	                .response(savedDTO)
-	                .build();
+			ResponseDTO responseDTO = ResponseDTO.builder().success(true).message(message).code(statusCode)
+					.response(savedDTO).build();
 
-	        return ResponseEntity.status(statusCode).body(responseDTO);
+			return ResponseEntity.status(statusCode).body(responseDTO);
 
-	    } catch (Exception e) {
-	        log.error("Error guardando usuario", e);
-	        return buildErrorResponse(Constantes.SAVE_ERROR, HttpStatus.BAD_REQUEST);
-	    }
+		} catch (Exception e) {
+			log.error("Error guardando usuario", e);
+			return buildErrorResponse(Constantes.SAVE_ERROR, HttpStatus.BAD_REQUEST);
+		}
 	}
 
 	private boolean isUpdate(UsuarioDTO usuarioDTO) {
-	    return usuarioDTO.getId() != null && usuarioRepository.existsById(usuarioDTO.getId());
+		return usuarioDTO.getId() != null && usuarioRepository.existsById(usuarioDTO.getId());
 	}
 
 	private boolean isDuplicated(UsuarioDTO usuarioDTO) {
-	    return usuarioDTO.getNombre() != null && usuarioRepository.existsByNombre(usuarioDTO.getNombre());
+		return usuarioDTO.getNombre() != null && usuarioRepository.existsByNombre(usuarioDTO.getNombre());
 	}
 
 	private UsuarioEntity updateEntityFromDto(UsuarioDTO usuarioDTO) {
-	    UsuarioEntity entity = usuarioRepository.findById(usuarioDTO.getId()).orElseThrow();
-	    usuarioMapper.updateEntityFromDto(usuarioDTO, entity);
-	    entity.setFechaModificacion(new Date());
-	    entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
-	    if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
-	        entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
-	    }
-	    return entity;
+		UsuarioEntity entity = usuarioRepository.findById(usuarioDTO.getId()).orElseThrow();
+		usuarioMapper.updateEntityFromDto(usuarioDTO, entity);
+		entity.setFechaModificacion(new Date());
+		entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
+		if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
+			entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+		}
+		return entity;
 	}
 
 	private UsuarioEntity createEntityFromDto(UsuarioDTO usuarioDTO) {
-	    UsuarioEntity entity = usuarioMapper.dtoToEntity(usuarioDTO);
-	    entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
-	    entity.setFechaCreacion(new Date());
-	    entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
-	    entity.setActivo(true);
-	    return entity;
+		UsuarioEntity entity = usuarioMapper.dtoToEntity(usuarioDTO);
+		entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+		entity.setFechaCreacion(new Date());
+		entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
+		entity.setActivo(true);
+		return entity;
 	}
 
 	private void setRolAndPersona(UsuarioEntity entity, UsuarioDTO usuarioDTO) {
-	    if (usuarioDTO.getRol() != null && usuarioDTO.getRol().getId() != null) {
-	        RolEntity rol = rolRepository.findById(usuarioDTO.getRol().getId())
-	                .orElseThrow(() -> new RuntimeException(Constantes.ROLE_NOT_FOUND));
-	        entity.setRol(rol);
-	    }
-	    if (usuarioDTO.getPersona() != null && usuarioDTO.getPersona().getId() != null) {
-	        PersonaEntity persona = personaRepository.findById(usuarioDTO.getPersona().getId())
-	                .orElseThrow(() -> new RuntimeException(Constantes.PERSON_NOT_FOUND));
-	        entity.setPersona(persona);
-	    }
+		if (usuarioDTO.getRol() != null && usuarioDTO.getRol().getId() != null) {
+			RolEntity rol = rolRepository.findById(usuarioDTO.getRol().getId())
+					.orElseThrow(() -> new RuntimeException(Constantes.ROLE_NOT_FOUND));
+			entity.setRol(rol);
+		}
+		if (usuarioDTO.getPersona() != null && usuarioDTO.getPersona().getId() != null) {
+			PersonaEntity persona = personaRepository.findById(usuarioDTO.getPersona().getId())
+					.orElseThrow(() -> new RuntimeException(Constantes.PERSON_NOT_FOUND));
+			entity.setPersona(persona);
+		}
 	}
 
 	private ResponseEntity<ResponseDTO> buildErrorResponse(String message, HttpStatus status) {
-	    ResponseDTO errorResponse = ResponseDTO.builder()
-	            .success(false)
-	            .message(message)
-	            .code(status.value())
-	            .build();
-	    return ResponseEntity.status(status).body(errorResponse);
+		ResponseDTO errorResponse = ResponseDTO.builder().success(false).message(message).code(status.value()).build();
+		return ResponseEntity.status(status).body(errorResponse);
 	}
 
-    @Override
+	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar usuario por id: {}", id);
-	    try {
-	        Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
-	        if (usuario.isPresent()) {
-	            UsuarioDTO dto = usuarioMapper.entityToDto(usuario.get());
-	            ResponseDTO responseDTO = ResponseDTO.builder()
-	                    .success(true)
-	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
-	                    .code(HttpStatus.OK.value())
-	                    .response(dto)
-	                    .build();
-	            return ResponseEntity.ok(responseDTO);
-	        } else {
-	            ResponseDTO responseDTO = ResponseDTO.builder()
-	                    .success(false)
-	                    .message(Constantes.CONSULTING_ERROR)
-	                    .code(HttpStatus.NOT_FOUND.value())
-	                    .build();
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
-	        }
-	    } catch (Exception e) {
-	        log.error("Error al buscar el usuario por id: {}", id, e);
-	        ResponseDTO responseDTO = ResponseDTO.builder()
-	                .success(false)
-	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
-	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-	                .build();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-	    }
+		log.info("Buscar usuario por id: {}", id);
+		try {
+			Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
+			if (usuario.isPresent()) {
+				UsuarioDTO dto = usuarioMapper.entityToDto(usuario.get());
+				ResponseDTO responseDTO = ResponseDTO.builder().success(true).message(Constantes.CONSULTED_SUCCESSFULLY)
+						.code(HttpStatus.OK.value()).response(dto).build();
+				return ResponseEntity.ok(responseDTO);
+			} else {
+				ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.CONSULTING_ERROR)
+						.code(HttpStatus.NOT_FOUND.value()).build();
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+			}
+		} catch (Exception e) {
+			log.error("Error al buscar el usuario por id: {}", id, e);
+			ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+					.code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+		}
 	}
 
-    @Override
-    public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los usuario");
-        try {
-            var list = usuarioRepository.findAll();
-            var dtoList = usuarioMapper.listEntityToDtoList(list);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.CONSULTED_SUCCESSFULLY)
-                    .code(HttpStatus.OK.value())
-                    .response(dtoList)
-                    .build();
-            return ResponseEntity.ok(responseDTO);
-        } catch (Exception e) {
-            log.error("Error al listar los usuarios", e);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.CONSULTING_ERROR)
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .response(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-        }
-    }
+	@Override
+	public ResponseEntity<ResponseDTO> findAll() {
+		log.info("Listar todos los usuario");
+		try {
+			var list = usuarioRepository.findAll();
+			var dtoList = usuarioMapper.listEntityToDtoList(list);
+			ResponseDTO responseDTO = ResponseDTO.builder().success(true).message(Constantes.CONSULTED_SUCCESSFULLY)
+					.code(HttpStatus.OK.value()).response(dtoList).build();
+			return ResponseEntity.ok(responseDTO);
+		} catch (Exception e) {
+			log.error("Error al listar los usuarios", e);
+			ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.CONSULTING_ERROR)
+					.code(HttpStatus.INTERNAL_SERVER_ERROR.value()).response(null).build();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+		}
+	}
 
-    @Override
-    public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar usuario por id: {}", id);
-        try {
-            if (!usuarioRepository.existsById(id)) {
-                ResponseDTO responseDTO = ResponseDTO.builder()
-                        .success(false)
-                        .message(Constantes.RECORD_NOT_FOUND)
-                        .code(HttpStatus.NOT_FOUND.value())
-                        .build();
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
-            }
-            usuarioRepository.deleteById(id);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.DELETED_SUCCESSFULLY)
-                    .code(HttpStatus.OK.value())
-                    .build();
-            return ResponseEntity.ok(responseDTO);
-        } catch (Exception e) {
-            log.error("Error al eliminar el usuario con id: {}", id, e);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.DELETE_ERROR)
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-        }
-    }
-    public ResponseEntity<ResponseDTO> updatePassword(Integer idUsuario, String nuevaContrasena, String usuarioModificacion) {
-        log.info("Inicio de actualización de contraseña para el usuario con ID: {}", idUsuario);
+	@Override
+	public ResponseEntity<ResponseDTO> deleteById(Integer id) {
+		log.info("Inicio método para eliminar usuario por id: {}", id);
+		try {
+			if (!usuarioRepository.existsById(id)) {
+				ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.RECORD_NOT_FOUND)
+						.code(HttpStatus.NOT_FOUND.value()).build();
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+			}
+			usuarioRepository.deleteById(id);
+			ResponseDTO responseDTO = ResponseDTO.builder().success(true).message(Constantes.DELETED_SUCCESSFULLY)
+					.code(HttpStatus.OK.value()).build();
+			return ResponseEntity.ok(responseDTO);
+		} catch (Exception e) {
+			log.error("Error al eliminar el usuario con id: {}", id, e);
+			ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.DELETE_ERROR)
+					.code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+		}
+	}
 
-        try {
-           
-            String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
+	public ResponseEntity<ResponseDTO> updatePassword(Integer idUsuario, String nuevaContrasena,
+			String usuarioModificacion) {
+		log.info("Inicio de actualización de contraseña para el usuario con ID: {}", idUsuario);
+		try {
+			String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
+			if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {
+				return ResponseEntity.badRequest().body(ResponseDTO.builder().success(false).message(
+						"La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
+						.code(HttpStatus.BAD_REQUEST.value()).build());
+			}
+			Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(idUsuario);
+			if (optionalUsuario.isEmpty()) {
+				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseDTO.builder().success(false)
+						.message("Usuario no encontrado").code(HttpStatus.NOT_FOUND.value()).build());
+			}
 
-            if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {
-                return ResponseEntity.badRequest().body(
-                    ResponseDTO.builder()
-                        .success(false)
-                        .message("La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
-                        .code(HttpStatus.BAD_REQUEST.value())
-                        .build()
-                );
-            }
+			UsuarioEntity usuario = optionalUsuario.get();
+			usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+			usuario.setFechaModificacion(new Date());
+			usuario.setUsuarioModificacion(usuarioModificacion);
 
-            Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(idUsuario);
-            if (optionalUsuario.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    ResponseDTO.builder()
-                        .success(false)
-                        .message("Usuario no encontrado")
-                        .code(HttpStatus.NOT_FOUND.value())
-                        .build()
-                );
-            }
+			usuarioRepository.save(usuario);
 
-            UsuarioEntity usuario = optionalUsuario.get();
-            usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
-            usuario.setFechaModificacion(new Date());
-            usuario.setUsuarioModificacion(usuarioModificacion);
+			return ResponseEntity.ok(ResponseDTO.builder().success(true).message("Contraseña actualizada exitosamente")
+					.code(HttpStatus.OK.value()).build());
 
-            usuarioRepository.save(usuario);
-
-            return ResponseEntity.ok(
-                ResponseDTO.builder()
-                    .success(true)
-                    .message("Contraseña actualizada exitosamente")
-                    .code(HttpStatus.OK.value())
-                    .build()
-            );
-
-        } catch (Exception e) {
-            log.error("Error al actualizar la contraseña del usuario con ID: {}", idUsuario, e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                ResponseDTO.builder()
-                    .success(false)
-                    .message("Error actualizando la contraseña")
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build()
-            );
-        }
-    }
-
-
+		} catch (Exception e) {
+			log.error("Error al actualizar la contraseña del usuario con ID: {}", idUsuario, e);
+			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+					.body(ResponseDTO.builder().success(false).message("Error actualizando la contraseña")
+							.code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+		}
+	}
 }
