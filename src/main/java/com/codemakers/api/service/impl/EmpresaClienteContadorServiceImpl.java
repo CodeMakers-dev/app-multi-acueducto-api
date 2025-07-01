@@ -92,6 +92,30 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
         }
     }
 
+    @Override
+    public ResponseEntity<ResponseDTO> findByEmpresaId(Integer idEmpresa) {
+        log.info("Buscar Empresa Cliente Contador por id de empresa: {}", idEmpresa);
+        try {
+            var list = empresaClienteContadorRepository.findByEmpresa_Id(idEmpresa);
+            var dtoList = empresaClienteContadorMapper.listEntityToDtoList(list);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(dtoList)
+                    .build();
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al consultar por id de empresa: {}", idEmpresa, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.CONSULTING_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+
 	@Override
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Empresa Cliente Contador por id: {}", id);

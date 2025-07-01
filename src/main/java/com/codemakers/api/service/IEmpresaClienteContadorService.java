@@ -9,7 +9,9 @@ public interface IEmpresaClienteContadorService {
     
 	ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO);
 	
-	ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO); 
+	ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO);
+	
+	ResponseEntity<ResponseDTO> findByEmpresaId(Integer idEmpresa);
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
     
