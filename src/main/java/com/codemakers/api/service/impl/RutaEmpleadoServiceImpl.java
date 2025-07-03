@@ -1,11 +1,17 @@
 package com.codemakers.api.service.impl;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service; 
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IRutaEmpleadoService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -14,6 +20,9 @@ import com.codemakers.commons.entities.RutaEmpleadoEntity;
 import com.codemakers.commons.maps.RutaEmpleadoMapper;
 import com.codemakers.commons.repositories.RutaEmpleadoRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +34,8 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
 	
 	private final RutaEmpleadoRepository rutaEmpleadoRepository;
 	private final RutaEmpleadoMapper rutaEmpleadoMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final ObjectMapper objectMapper;
 	
 	@Override
     public ResponseEntity<ResponseDTO> save(RutaEmpleadoDTO rutaEmpleadoDTO) {
@@ -178,6 +189,41 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
                     .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                     .build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+    
+    /**
+     * Sincroniza datos de rutas asignadas a un lector usando su ID.
+     * Llama un SP en PostgreSQL que retorna estructura JSON con empresas, clientes y lecturas.
+     * 
+     * @author nicope
+     * @version 1.0
+     */
+    @Transactional
+    public Map<String, Object> syncLectorData(Integer idPersona) {
+        try {
+            String sql = "SELECT * FROM public.sync_lector_data(:idPersona)";
+            
+            MapSqlParameterSource parameters = new MapSqlParameterSource();
+            parameters.addValue("idPersona", idPersona);
+
+            Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+            Object wrappedValue = rawResult.get("sync_lector_data");
+
+            if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+                String jsonValue = pgObject.getValue();
+                return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+            }
+
+            return Map.of(Constantes.ERROR_KEY, Constantes.RESULT_COULD_NOT_PROCESSED);
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.PROCCESSING_ERROR + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.UNEXPECTED_ERROR + e.getMessage());
         }
     }
 }

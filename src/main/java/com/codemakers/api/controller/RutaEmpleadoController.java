@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -114,5 +117,38 @@ public class RutaEmpleadoController {
     @PutMapping
     public ResponseEntity<ResponseDTO> update(@RequestBody RutaEmpleadoDTO rutaEmpleadoDTO) {
         return rutaEmpleadoServiceImpl.update(rutaEmpleadoDTO);
+    }
+    
+    @Operation(summary = "Sincronizar datos del lector")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Operación completada exitosamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
+            @ApiResponse(responseCode = "403", description = "La persona no es un lector válido o no tiene permisos", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
+    })
+    @GetMapping("/sync/{idPersona}")
+    public ResponseEntity<Map<String, Object>> sincronizarRuta(@PathVariable Integer idPersona) {
+        try {
+            Map<String, Object> resultFromService = rutaEmpleadoServiceImpl.syncLectorData(idPersona);
+
+            String status = String.valueOf(resultFromService.getOrDefault("statusCode", "200"));
+            HttpStatus httpStatus = switch (status) {
+                case "403" -> HttpStatus.FORBIDDEN;
+                case "500" -> HttpStatus.INTERNAL_SERVER_ERROR;
+                default -> HttpStatus.OK;
+            };
+
+            return ResponseEntity.status(httpStatus).body(resultFromService);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "message", "Error en la operación del controlador",
+                            "statusCode", "500",
+                            "error", e.getMessage()
+                    ));
+        }
     }
 }
