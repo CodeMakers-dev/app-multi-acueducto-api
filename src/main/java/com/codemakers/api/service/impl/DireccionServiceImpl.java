@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IDireccionService;
 import com.codemakers.commons.dtos.DireccionDTO;
@@ -43,6 +44,7 @@ public class DireccionServiceImpl implements IDireccionService {
 	private final DireccionMapper direccionMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(DireccionDTO direccionDTO) {
 	    log.info("Guardar/Actualizar direccion");
 	    try {
@@ -110,6 +112,7 @@ public class DireccionServiceImpl implements IDireccionService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar direccion por id: {}", id);
 	    try {
@@ -143,6 +146,7 @@ public class DireccionServiceImpl implements IDireccionService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todas las direcciones");
         try {
@@ -168,6 +172,7 @@ public class DireccionServiceImpl implements IDireccionService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar direccion por id: {}", id);
         try {

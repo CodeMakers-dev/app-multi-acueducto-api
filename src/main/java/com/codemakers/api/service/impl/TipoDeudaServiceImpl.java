@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ITipoDeudaService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -27,6 +28,7 @@ public class TipoDeudaServiceImpl implements ITipoDeudaService{
 	private final TipoDeudaMapper tipoDeudaMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(TipoDeudaDTO tipoDeudaDTO) {
 	    log.info("Guardar/Actualizar Tipo de Deuda");
 	    try {
@@ -73,6 +75,7 @@ public class TipoDeudaServiceImpl implements ITipoDeudaService{
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar tipo de Deuda por id: {}", id);
 	    try {
@@ -106,6 +109,7 @@ public class TipoDeudaServiceImpl implements ITipoDeudaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los tipos de Deuda");
         try {
@@ -131,6 +135,7 @@ public class TipoDeudaServiceImpl implements ITipoDeudaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar tipo de Deuda por id: {}", id);
         try {

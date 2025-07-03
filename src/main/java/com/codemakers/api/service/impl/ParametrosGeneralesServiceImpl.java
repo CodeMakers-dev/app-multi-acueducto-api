@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IParametrosGeneralesService;
 import com.codemakers.commons.dtos.ParametrosGeneralesDTO;
@@ -27,6 +28,7 @@ public class ParametrosGeneralesServiceImpl implements IParametrosGeneralesServi
 	private final ParametrosGeneralesMapper parametrosGeneralesMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(ParametrosGeneralesDTO parametrosGeneralesDTO) {
 	    log.info("Guardar/Actualizar Parametros Generales");
 	    try {
@@ -73,6 +75,7 @@ public class ParametrosGeneralesServiceImpl implements IParametrosGeneralesServi
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Parametros Generales por id: {}", id);
 	    try {
@@ -106,6 +109,7 @@ public class ParametrosGeneralesServiceImpl implements IParametrosGeneralesServi
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los Parametros Generales");
         try {
@@ -131,6 +135,7 @@ public class ParametrosGeneralesServiceImpl implements IParametrosGeneralesServi
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Parametros Generales por id: {}", id);
         try {

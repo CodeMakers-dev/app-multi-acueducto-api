@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IDepartamentoService;
 import com.codemakers.commons.dtos.DepartamentoDTO;
@@ -34,6 +35,7 @@ public class DepartamentoServiceImpl implements IDepartamentoService {
 	private final DepartamentoMapper departamentoMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(DepartamentoDTO departamentoDTO) {
 	    log.info("Guardar/Actualizar departamento");
 	    try {
@@ -80,6 +82,7 @@ public class DepartamentoServiceImpl implements IDepartamentoService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar departamento por id: {}", id);
 	    try {
@@ -113,6 +116,7 @@ public class DepartamentoServiceImpl implements IDepartamentoService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los departamentos");
         try {
@@ -138,6 +142,7 @@ public class DepartamentoServiceImpl implements IDepartamentoService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar persona por id: {}", id);
         try {

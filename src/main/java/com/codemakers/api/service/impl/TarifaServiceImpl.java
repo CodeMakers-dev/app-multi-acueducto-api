@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ITarifaService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -41,6 +42,7 @@ public class TarifaServiceImpl implements ITarifaService{
 	private final TarifaMapper tarifaMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(TarifaDTO tarifaDTO) {
 	    log.info("Guardar/Actualizar tarifa");
 	    try {
@@ -112,6 +114,7 @@ public class TarifaServiceImpl implements ITarifaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar tarifa por id: {}", id);
 	    try {
@@ -145,6 +148,7 @@ public class TarifaServiceImpl implements ITarifaService{
 	}
     
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findByEmpresaId(Integer empresaId) {
         log.info("Buscar tarifas por id de empresa: {}", empresaId);
         try {
@@ -185,6 +189,7 @@ public class TarifaServiceImpl implements ITarifaService{
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todas las tarifas");
         try {
@@ -210,6 +215,7 @@ public class TarifaServiceImpl implements ITarifaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar tarifa por id: {}", id);
         try {

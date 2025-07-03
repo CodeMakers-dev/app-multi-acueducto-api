@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IRolService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -34,6 +35,7 @@ public class RolServiceImpl implements IRolService {
 	private final RolMapper rolMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(RolDTO rolDTO) {
 	    log.info("Inicio guardar/actualizar rol");
 	    try {
@@ -82,6 +84,7 @@ public class RolServiceImpl implements IRolService {
 	}
 	
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findRolById(Integer id) {
 	    log.info("Inicio del método para obtener el rol por id: {}", id);
 
@@ -110,6 +113,7 @@ public class RolServiceImpl implements IRolService {
 	}
 	
 	@Override
+	@Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Inicio método para obtener todos los roles");
         try {
@@ -135,6 +139,7 @@ public class RolServiceImpl implements IRolService {
     }
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> delete(Integer id) {
 	    log.info("Inicio eliminar rol por id: {}", id);
 	    try {

@@ -128,10 +128,10 @@ public class RutaEmpleadoController {
             @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
     })
-    @GetMapping("/sync/{idPersona}")
-    public ResponseEntity<Map<String, Object>> sincronizarRuta(@PathVariable Integer idPersona) {
+    @GetMapping("/sync/{idPersona}/{offset}/{limit}")
+    public ResponseEntity<Map<String, Object>> sincronizarRuta(@PathVariable Integer idPersona, @PathVariable Integer offset, @PathVariable Integer limit) {
         try {
-            Map<String, Object> resultFromService = rutaEmpleadoServiceImpl.syncLectorData(idPersona);
+            Map<String, Object> resultFromService = rutaEmpleadoServiceImpl.syncLectorData(idPersona, offset, limit);
 
             String status = String.valueOf(resultFromService.getOrDefault("statusCode", "200"));
             HttpStatus httpStatus = switch (status) {

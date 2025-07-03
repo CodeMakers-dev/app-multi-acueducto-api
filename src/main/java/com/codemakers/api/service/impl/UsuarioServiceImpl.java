@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.config.JwtUtil;
 import com.codemakers.api.service.IUsuarioService;
@@ -85,6 +86,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO) {
 		log.info("Guardar/Actualizar usuario");
 		try {
@@ -162,6 +164,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 		log.info("Buscar usuario por id: {}", id);
 		try {
@@ -185,6 +188,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findAll() {
 		log.info("Listar todos los usuario");
 		try {
@@ -202,6 +206,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	}
 
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> deleteById(Integer id) {
 		log.info("Inicio método para eliminar usuario por id: {}", id);
 		try {

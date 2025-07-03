@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ITipoTarifaService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -34,6 +35,7 @@ public class TipoTarifaServiceImpl implements ITipoTarifaService {
 	private final TipoTarifaMapper tipoTarifaMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(TipoTarifaDTO tipoTarifaDTO) {
 	    log.info("Guardar/Actualizar Tipo de Tarifa");
 	    try {
@@ -80,6 +82,7 @@ public class TipoTarifaServiceImpl implements ITipoTarifaService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar tipo de tarifa por id: {}", id);
 	    try {
@@ -113,6 +116,7 @@ public class TipoTarifaServiceImpl implements ITipoTarifaService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los tipos de tarifas");
         try {
@@ -138,6 +142,7 @@ public class TipoTarifaServiceImpl implements ITipoTarifaService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar tipo de tarifa por id: {}", id);
         try {

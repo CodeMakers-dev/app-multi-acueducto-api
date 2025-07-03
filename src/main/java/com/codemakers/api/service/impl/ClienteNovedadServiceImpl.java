@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IClienteNovedadService;
 import com.codemakers.commons.dtos.ClienteNovedadDTO;
@@ -27,6 +28,7 @@ public class ClienteNovedadServiceImpl implements IClienteNovedadService{
 	private final ClienteNovedadMapper clienteNovedadMapper;
 	
 	@Override
+	@Transactional
     public ResponseEntity<ResponseDTO> save(ClienteNovedadDTO clienteNovedadDTO) {
         log.info("Inicio metodo crear Cliente Novedad");
         try {
@@ -59,6 +61,7 @@ public class ClienteNovedadServiceImpl implements IClienteNovedadService{
 
     
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> update(ClienteNovedadDTO clienteNovedadDTO) {
         log.info("inicio metodo Actualizando Cliente Novedad");
         try {
@@ -94,6 +97,7 @@ public class ClienteNovedadServiceImpl implements IClienteNovedadService{
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Cliente Novedad por id: {}", id);
 	    try {
@@ -127,6 +131,7 @@ public class ClienteNovedadServiceImpl implements IClienteNovedadService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los Cliente Novedad");
         try {
@@ -152,6 +157,7 @@ public class ClienteNovedadServiceImpl implements IClienteNovedadService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Cliente Novedad por id: {}", id);
         try {

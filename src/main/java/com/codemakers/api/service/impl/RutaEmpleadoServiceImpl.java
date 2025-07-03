@@ -38,6 +38,7 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
     private final ObjectMapper objectMapper;
 	
 	@Override
+	@Transactional
     public ResponseEntity<ResponseDTO> save(RutaEmpleadoDTO rutaEmpleadoDTO) {
         log.info("Creando Ruta Empleado");
         try {
@@ -67,9 +68,9 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
-
     
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> update(RutaEmpleadoDTO rutaEmpleadoDTO) {
         log.info("Actualizando Ruta Empleado");
         try {
@@ -138,6 +139,7 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las Ruta Empleado");
         try {
@@ -163,6 +165,7 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Ruta Empleado por id: {}", id);
         try {
@@ -200,12 +203,14 @@ public class RutaEmpleadoServiceImpl implements IRutaEmpleadoService{
      * @version 1.0
      */
     @Transactional
-    public Map<String, Object> syncLectorData(Integer idPersona) {
+    public Map<String, Object> syncLectorData(Integer idPersona, Integer offset, Integer limit) {
         try {
-            String sql = "SELECT * FROM public.sync_lector_data(:idPersona)";
+            String sql = "SELECT * FROM public.sync_lector_data(:idPersona, :offset, :limit)";
             
             MapSqlParameterSource parameters = new MapSqlParameterSource();
             parameters.addValue("idPersona", idPersona);
+            parameters.addValue("offset", offset);
+            parameters.addValue("limit", limit);
 
             Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
 

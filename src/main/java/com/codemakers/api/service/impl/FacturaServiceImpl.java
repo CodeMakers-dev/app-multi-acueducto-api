@@ -48,6 +48,7 @@ public class FacturaServiceImpl implements IFacturaService{
     private final ObjectMapper objectMapper;
 	
 	@Override
+	@Transactional
     public ResponseEntity<ResponseDTO> save(FacturaDTO facturaDTO) {
         log.info("Creando Factura");
         try {
@@ -80,6 +81,7 @@ public class FacturaServiceImpl implements IFacturaService{
 
     
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> update(FacturaDTO facturaDTO) {
 	    log.info("Actualizando factura con ID: {}", facturaDTO.getId());
 
@@ -143,6 +145,7 @@ public class FacturaServiceImpl implements IFacturaService{
 
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar factura por id: {}", id);
 	    try {
@@ -176,6 +179,7 @@ public class FacturaServiceImpl implements IFacturaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las facturas");
         try {
@@ -201,6 +205,7 @@ public class FacturaServiceImpl implements IFacturaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar factura por id: {}", id);
         try {
@@ -238,7 +243,6 @@ public class FacturaServiceImpl implements IFacturaService{
      * @author nicope
      * @version 1.0
      */
-    
     @Transactional
     public Map<String, Object> generarFactura(Map<String, Object> jsonParams) {
         try {

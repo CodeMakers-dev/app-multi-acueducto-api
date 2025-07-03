@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ICorreoEmpresaService;
 import com.codemakers.commons.dtos.CorreoEmpresaDTO;
@@ -27,6 +28,7 @@ public class CorreoEmpresaServiceImpl implements ICorreoEmpresaService{
 	private final CorreoEmpresaMapper correoEmpresaMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(CorreoEmpresaDTO correoEmpresaDTO) {
 	    log.info("Guardar/Actualizar Correo Empresa");
 	    try {
@@ -85,6 +87,7 @@ public class CorreoEmpresaServiceImpl implements ICorreoEmpresaService{
 
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Correo Empresa por id: {}", id);
 	    try {
@@ -118,6 +121,7 @@ public class CorreoEmpresaServiceImpl implements ICorreoEmpresaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los Correo Empresa");
         try {
@@ -143,6 +147,7 @@ public class CorreoEmpresaServiceImpl implements ICorreoEmpresaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Correo Empresa por id: {}", id);
         try {
