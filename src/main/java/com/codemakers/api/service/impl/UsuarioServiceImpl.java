@@ -64,7 +64,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 			}
 			UsuarioEntity usuario = usuarioOpt.get();
 			String token = jwtUtil.generateToken(usuario.getNombre());
-			String recoveryLink = "https://tuapp.com/reset-password?token=" + token;
+			String recoveryLink = "http://localhost:4200/auth/recover-password?token=" + token;
 
 			String subject = "🔐 Recuperación de contraseña";
 			String body = "<p>Hola <strong>" + usuario.getNombre() + "</strong>,</p>"
