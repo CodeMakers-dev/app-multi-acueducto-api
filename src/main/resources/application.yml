@@ -2,7 +2,7 @@ spring:
   application:
     name: multi-acueductos-api
   datasource:
-    url: jdbc:postgresql://localhost:5432/bd_acueductos
+    url: jdbc:postgresql://localhost:5432/db_acueductos
     username: postgres
     password: admin
     driver-class-name: org.postgresql.Driver
