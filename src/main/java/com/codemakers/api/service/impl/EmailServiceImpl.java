@@ -1,6 +1,5 @@
 package com.codemakers.api.service.impl;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ public class EmailServiceImpl {
 	
 	private final JavaMailSender mailSender;
 
-	@Autowired
 	public EmailServiceImpl(JavaMailSender mailSender) {
 		this.mailSender = mailSender;
 	}

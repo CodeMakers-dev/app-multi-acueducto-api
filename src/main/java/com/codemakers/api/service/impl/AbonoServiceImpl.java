@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IAbonoService;
 import com.codemakers.commons.dtos.AbonoDTO;
@@ -27,6 +28,7 @@ public class AbonoServiceImpl implements IAbonoService{
 	private final AbonoMapper abonoMapper;
 	
 	@Override
+	@Transactional
     public ResponseEntity<ResponseDTO> save(AbonoDTO abonoDTO) {
         log.info("Inicio metodo crear abono");
         try {
@@ -59,6 +61,7 @@ public class AbonoServiceImpl implements IAbonoService{
 
     
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> update(AbonoDTO abonoDTO) {
         log.info("inicio metodo Actualizando abono");
         try {
@@ -94,6 +97,7 @@ public class AbonoServiceImpl implements IAbonoService{
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar abono por id: {}", id);
 	    try {
@@ -127,6 +131,7 @@ public class AbonoServiceImpl implements IAbonoService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los abonos");
         try {
@@ -152,6 +157,7 @@ public class AbonoServiceImpl implements IAbonoService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar abono por id: {}", id);
         try {

@@ -1,11 +1,17 @@
 package com.codemakers.api.service.impl;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ILecturaService;
 import com.codemakers.commons.dtos.LecturaDTO;
@@ -16,6 +22,9 @@ import com.codemakers.commons.maps.LecturaMapper;
 import com.codemakers.commons.repositories.ContadorRepository;
 import com.codemakers.commons.repositories.LecturaRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,8 +44,11 @@ public class LecturaServiceImpl implements ILecturaService {
 	private final LecturaRepository lecturaRepository;
 	private final ContadorRepository contadorRepository;
 	private final LecturaMapper lecturaMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final ObjectMapper objectMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(LecturaDTO lecturaDTO) {
 	    log.info("Guardar/Actualizar lectura");
 	    try {
@@ -89,8 +101,47 @@ public class LecturaServiceImpl implements ILecturaService {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	    }
 	}
+	
+	/**
+     * Guarda una lectura a partir de los parámetros recibidos en formato JSON.
+     * Llama a un procedimiento almacenado en PostgreSQL y devuelve el resultado deserializado.
+     * 
+     * @author nicope
+     * @version 1.0
+     */
+	@Transactional
+    public Map<String, Object> guardarLectura(Map<String, Object> jsonParams) {
+        try {
+            String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+            String sql = "SELECT * FROM public.registrar_lectura(CAST(:jsonData AS jsonb))";
+            
+            MapSqlParameterSource parameters = new MapSqlParameterSource();
+            parameters.addValue("jsonData", jsonString);
+
+            Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+            // Obtener el campo "value" del resultado
+            Object wrappedValue = rawResult.get("registrar_lectura");
+            if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+                String jsonValue = pgObject.getValue();
+                // Deserializar a Map
+                return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+            }
+
+            return Map.of(Constantes.ERROR_KEY, Constantes.RESULT_COULD_NOT_PROCESSED);
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.PROCCESSING_ERROR + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.singletonMap(Constantes.ERROR_KEY, Constantes.UNEXPECTED_ERROR + e.getMessage());
+        }
+    }
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar lectura por id: {}", id);
 	    try {
@@ -124,6 +175,7 @@ public class LecturaServiceImpl implements ILecturaService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todas las lecturas");
         try {
@@ -149,6 +201,7 @@ public class LecturaServiceImpl implements ILecturaService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar lectura por id: {}", id);
         try {

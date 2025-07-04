@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ICiudadService;
 import com.codemakers.commons.dtos.CiudadDTO;
@@ -34,6 +35,7 @@ public class CiudadServiceImpl implements ICiudadService {
 	private final CiudadMapper ciudadMapper;
 
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(CiudadDTO ciudadDTO) {
 	    log.info("Guardar/Actualizar Ciudad");
 	    try {
@@ -80,6 +82,7 @@ public class CiudadServiceImpl implements ICiudadService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar ciudad por id: {}", id);
 	    try {
@@ -113,6 +116,7 @@ public class CiudadServiceImpl implements ICiudadService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las ciudades");
         try {
@@ -138,6 +142,7 @@ public class CiudadServiceImpl implements ICiudadService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar ciudad por id: {}", id);
         try {

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEstadoService;
 import com.codemakers.commons.dtos.EstadoDTO;
@@ -27,6 +28,7 @@ public class EstadoServiceImpl implements IEstadoService{
 	private final EstadoMapper estadoMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(EstadoDTO estadoDTO) {
 	    log.info("Guardar/Actualizar estado");
 	    try {
@@ -73,6 +75,7 @@ public class EstadoServiceImpl implements IEstadoService{
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar estado por id: {}", id);
 	    try {
@@ -106,6 +109,7 @@ public class EstadoServiceImpl implements IEstadoService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos los estados");
         try {
@@ -131,6 +135,7 @@ public class EstadoServiceImpl implements IEstadoService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar estado por id: {}", id);
         try {

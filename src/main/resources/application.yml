@@ -4,8 +4,10 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/bd_acueductos
     username: postgres
-    password: pasword
+    password: admin
     driver-class-name: org.postgresql.Driver
+    hikari:
+      auto-commit: false
   jpa:
     hibernate:
       ddl-auto: none

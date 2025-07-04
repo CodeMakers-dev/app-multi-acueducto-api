@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpresaClienteContadorService;
 import com.codemakers.commons.dtos.EmpresaClienteContadorDTO;
@@ -27,6 +28,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	private final EmpresaClienteContadorMapper empresaClienteContadorMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
 	    log.info("Creando Empresa Cliente Contador");
 	    try {
@@ -74,6 +76,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	    }
 	}
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
         log.info("Actualizando Empresa Cliente Contador");
         try {
@@ -108,6 +111,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findByEmpresaId(Integer idEmpresa) {
         log.info("Buscar Empresa Cliente Contador por id de empresa: {}", idEmpresa);
         try {
@@ -132,6 +136,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Empresa Cliente Contador por id: {}", id);
 	    try {
@@ -165,6 +170,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las Empresa Cliente Contador");
         try {
@@ -190,6 +196,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Empresa Cliente Contador por id: {}", id);
         try {

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.ITelefonoEmpresaService;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -27,6 +28,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 	private final TelefonoEmpresaMapper telefonoEmpresaMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(TelefonoEmpresaDTO telefonoEmpresaDTO) {
 	    log.info("Guardar/Actualizar Telefono de Empresa");
 	    try {
@@ -98,6 +100,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Telefono de Empresa por id: {}", id);
 	    try {
@@ -131,6 +134,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos Telefono de Empresa");
         try {
@@ -156,6 +160,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Telefono de Empresa por id: {}", id);
         try {

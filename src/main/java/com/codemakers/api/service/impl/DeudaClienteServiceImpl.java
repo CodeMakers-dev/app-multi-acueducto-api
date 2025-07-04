@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IDeudaClienteService;
 import com.codemakers.commons.dtos.DeudaClienteDTO;
@@ -27,6 +28,7 @@ public class DeudaClienteServiceImpl implements IDeudaClienteService{
 	private final DeudaClienteMapper deudaClienteMapper;
 	
 	@Override
+	@Transactional
 	public ResponseEntity<ResponseDTO> save(DeudaClienteDTO deudaClienteDTO) {
 	    log.info("Guardar/Actualizar Deuda de Cliente");
 	    try {
@@ -73,6 +75,7 @@ public class DeudaClienteServiceImpl implements IDeudaClienteService{
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Deuda de Cliente por id: {}", id);
 	    try {
@@ -106,6 +109,7 @@ public class DeudaClienteServiceImpl implements IDeudaClienteService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las Deudas de Cliente");
         try {
@@ -131,6 +135,7 @@ public class DeudaClienteServiceImpl implements IDeudaClienteService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar Deuda de Cliente por id: {}", id);
         try {

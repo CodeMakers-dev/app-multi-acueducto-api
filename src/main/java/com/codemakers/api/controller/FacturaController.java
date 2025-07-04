@@ -122,7 +122,7 @@ public class FacturaController {
     @Operation(summary = "Generar Factura")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Operación completada exitosamente", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }), // Schema reflects Map
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
             @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis o validación", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
             @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {

@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpresaService;
 import com.codemakers.commons.dtos.EmpresaDTO;
@@ -27,6 +28,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	private final EmpresaMapper empresaMapper;
 	
 	@Override
+	@Transactional
     public ResponseEntity<ResponseDTO> save(EmpresaDTO empresaDTO) {
         log.info("Creando Empresa");
         try {
@@ -59,6 +61,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
 
     
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> update(EmpresaDTO empresaDTO) {
         log.info("Actualizando Empresa");
         try {
@@ -94,6 +97,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
     }
 
 	@Override
+	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar Empresa por id: {}", id);
 	    try {
@@ -127,6 +131,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las empresas");
         try {
@@ -152,6 +157,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar empresa por id: {}", id);
         try {

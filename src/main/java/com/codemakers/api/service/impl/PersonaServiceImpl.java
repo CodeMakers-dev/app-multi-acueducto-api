@@ -6,6 +6,7 @@ import java.util.Optional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IPersonaService;
 import com.codemakers.commons.dtos.PersonaDTO;
@@ -40,6 +41,7 @@ public class PersonaServiceImpl implements IPersonaService {
     private final PersonaMapper personaMapper;
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> save(PersonaDTO personaDTO) {
         log.info("Guardar/Actualizar persona");
 
@@ -138,6 +140,7 @@ public class PersonaServiceImpl implements IPersonaService {
     }
 
     @Override
+    @Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
 	    log.info("Buscar persona por id: {}", id);
 	    try {
@@ -171,6 +174,7 @@ public class PersonaServiceImpl implements IPersonaService {
 	}
 
     @Override
+    @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todas las personas");
         try {
@@ -196,6 +200,7 @@ public class PersonaServiceImpl implements IPersonaService {
     }
 
     @Override
+    @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
         log.info("Inicio método para eliminar persona por id: {}", id);
         try {

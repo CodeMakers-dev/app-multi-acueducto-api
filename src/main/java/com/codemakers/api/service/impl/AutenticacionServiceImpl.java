@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.config.InvalidCredentialsException;
 import com.codemakers.api.config.JwtUtil;
@@ -40,6 +41,7 @@ public class AutenticacionServiceImpl {
     private final JwtUtil jwtUtil;
     private final VigenciaUsuarioRepository vigenciaUsuarioRepository;
 
+    @Transactional
     public ResponseEntity<ResponseDTO> autentication(String username, String password) {
         try {
             UsuarioEntity usuario = usuarioRepository.findByNombre(username)
