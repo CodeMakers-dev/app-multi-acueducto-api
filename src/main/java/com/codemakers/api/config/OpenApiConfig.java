@@ -15,22 +15,32 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class OpenApiConfig {
 
-	private final Environment env;
+private static final String SPRING_APPLICATION_NAME = "spring.application.name";
+    
+    private final Environment env;
 
-	@Bean
-	public OpenAPI customOpenAPI() {
-	return new OpenAPI().info(new Info().title(env.getProperty("spring.application.name") + " Service API")
-	.version("1.0").description(env.getProperty("spring.application.name") + " API Description")
-	.termsOfService("https://multi-acueductos.com.co")
-	.contact(new Contact().name("MULTI ACUEDUCTOS").email("admongestionplus360@gmail.com"))
-	.license(new License().name("LICENSE").url("LICENSE URL")));
-	}
+    @Bean
+    OpenAPI customOpenAPI() {
+        String appName = env.getProperty(SPRING_APPLICATION_NAME);
+        return new OpenAPI().info(new Info()
+            .title(appName + " Service API")
+            .version("1.0")
+            .description(appName + " API Description")
+            .termsOfService("https://multi-acueductos.com.co")
+            .contact(new Contact()
+                .name("MULTI ACUEDUCTOS")
+                .email("admongestionplus360@gmail.com"))
+            .license(new License()
+                .name("LICENSE")
+                .url("LICENSE URL")));
+    }
 
-	@Bean
-	public GroupedOpenApi groupPermitted() {
-	return GroupedOpenApi.builder().group(env.getProperty("spring.application.name"))
-	.packagesToScan("com.codemakers.api.controller")
-	.packagesToExclude("com.codemakers.commons.dtos","com.codemakers.commons.entities")
-	.build();
-	}
+    @Bean
+    GroupedOpenApi groupPermitted() {
+        return GroupedOpenApi.builder()
+            .group(env.getProperty(SPRING_APPLICATION_NAME))
+            .packagesToScan("com.codemakers.api.controller")
+            .packagesToExclude("com.codemakers.commons.dtos", "com.codemakers.commons.entities")
+            .build();
+    }
 }
