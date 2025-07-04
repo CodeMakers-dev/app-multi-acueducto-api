@@ -4,6 +4,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import javax.crypto.SecretKey;
@@ -28,6 +30,8 @@ public class JwtUtil {
 
 	@Value("${jwt.secret}")
     private String secretKey;
+	
+	private final Set<String> invalidatedTokens = ConcurrentHashMap.newKeySet();
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = secretKey.getBytes(StandardCharsets.UTF_8);
@@ -79,5 +83,27 @@ public class JwtUtil {
     public Boolean validateToken(String token, String username) {
         final String usernameFromToken = extractUsername(token);
         return (usernameFromToken.equals(username) && !isTokenExpired(token));
+    }
+    
+    public void invalidateToken(String token) {
+        invalidatedTokens.add(token);
+    }
+
+    public boolean isTokenInvalid(String token) {
+        return invalidatedTokens.contains(token);
+    }
+    public String getUsernameFromToken(String token) {
+        return getClaimFromToken(token, Claims::getSubject);
+    }
+    public <T> T getClaimFromToken(String token, Function<Claims, T> claimsResolver) {
+        final Claims claims = getAllClaimsFromToken(token);
+        return claimsResolver.apply(claims);
+    }
+    private Claims getAllClaimsFromToken(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSigningKey()) 
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

@@ -84,6 +84,88 @@ public class UsuarioServiceImpl implements IUsuarioService {
 			return buildErrorResponse(Constantes.ERROR_APPLICATION, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
+	
+	public ResponseEntity<ResponseDTO> updatePasswordByToken(String token, UsuarioDTO usuarioDTO) {
+		log.info("Inicio de actualización de contraseña usando token");
+
+		if (token == null || token.trim().isEmpty()) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+				ResponseDTO.builder()
+					.success(false)
+					.message("Token requerido")
+					.code(HttpStatus.UNAUTHORIZED.value())
+					.build()
+			);
+		}
+
+		if (jwtUtil.isTokenInvalid(token)) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+				ResponseDTO.builder()
+					.success(false)
+					.message("Token inválido o expirado")
+					.code(HttpStatus.UNAUTHORIZED.value())
+					.build()
+			);
+		}
+
+		String username = jwtUtil.getUsernameFromToken(token);
+		if (username == null) {
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+				ResponseDTO.builder()
+					.success(false)
+					.message("Token expirado o sin usuario válido")
+					.code(HttpStatus.UNAUTHORIZED.value())
+					.build()
+			);
+		}
+
+		return usuarioRepository.findByNombre(username).map(usuario -> {
+			String nuevaContrasena = usuarioDTO.getContrasena();
+
+			String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
+			if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {
+				return ResponseEntity.badRequest().body(
+					ResponseDTO.builder()
+						.success(false)
+						.message("La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
+						.code(HttpStatus.BAD_REQUEST.value())
+						.build()
+				);
+			}
+
+			if (passwordEncoder.matches(nuevaContrasena, usuario.getContrasena())) {
+				return ResponseEntity.badRequest().body(
+					ResponseDTO.builder()
+						.success(false)
+						.message("La nueva contraseña debe ser diferente a la actual.")
+						.code(HttpStatus.BAD_REQUEST.value())
+						.build()
+				);
+			}
+
+			usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+			usuario.setFechaModificacion(new Date());
+			usuario.setUsuarioModificacion("Recuperación vía token"); 
+
+			usuarioRepository.save(usuario);
+
+			jwtUtil.invalidateToken(token); 
+			return ResponseEntity.ok(
+				ResponseDTO.builder()
+					.success(true)
+					.message("Contraseña actualizada exitosamente")
+					.code(HttpStatus.OK.value())
+					.build()
+			);
+		}).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+			ResponseDTO.builder()
+				.success(false)
+				.message("Usuario no encontrado")
+				.code(HttpStatus.NOT_FOUND.value())
+				.build()
+		));
+	}
+
 
 	@Override
 	@Transactional
