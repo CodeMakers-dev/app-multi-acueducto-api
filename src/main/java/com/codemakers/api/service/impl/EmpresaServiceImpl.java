@@ -1,10 +1,16 @@
 package com.codemakers.api.service.impl;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +21,9 @@ import com.codemakers.commons.entities.EmpresaEntity;
 import com.codemakers.commons.maps.EmpresaMapper;
 import com.codemakers.commons.repositories.EmpresaRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +35,9 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	
 	private final EmpresaRepository empresaRepository;
 	private final EmpresaMapper empresaMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final ObjectMapper objectMapper;
+    private final PasswordEncoder passwordEncoder;
 	
 	@Override
 	@Transactional
@@ -58,7 +70,42 @@ public class EmpresaServiceImpl implements IEmpresaService{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
+	
+	@Transactional
+    public Map<String, Object> registrarEmpresa(Map<String, Object> jsonParams) {
+        try {
+            String plainPassword = (String) jsonParams.get("password");
 
+            if (plainPassword != null) {
+                String encodedPassword = passwordEncoder.encode(plainPassword);
+                jsonParams.put("password", encodedPassword);
+            }
+
+            String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+            String sql = "SELECT * FROM public.crear_o_actualizar_empresa(CAST(:jsonData AS jsonb))"; 
+            
+            MapSqlParameterSource parameters = new MapSqlParameterSource();
+            parameters.addValue("jsonData", jsonString);
+
+            Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+            Object wrappedValue = rawResult.get("crear_o_actualizar_empresa"); 
+            if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+                String jsonValue = pgObject.getValue();
+                return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+            }
+
+            return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+            return Collections.singletonMap("error", "Error de procesamiento JSON: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Collections.singletonMap("error", "Error inesperado: " + e.getMessage());
+        }
+    }
     
     @Override
     @Transactional
