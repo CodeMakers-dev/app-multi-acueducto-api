@@ -181,10 +181,9 @@ public class UsuarioController {
     })
     @PostMapping("/update-password")
     public ResponseEntity<ResponseDTO> updatePasswordByToken(
-        @RequestHeader("Authorization") String token,
+        @RequestHeader("token") String token,
         @RequestBody UsuarioDTO usuarioDTO
     ) {
-        String cleanedToken = token.replace("Bearer ", "");
-        return usuarioServiceImpl.updatePasswordByToken(cleanedToken, usuarioDTO);
+        return usuarioServiceImpl.updatePasswordByToken(token, usuarioDTO);
     }
 }

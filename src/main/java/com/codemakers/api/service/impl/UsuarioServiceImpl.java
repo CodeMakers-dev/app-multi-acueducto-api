@@ -68,11 +68,89 @@ public class UsuarioServiceImpl implements IUsuarioService {
 			String recoveryLink = "http://localhost:4200/auth/recover-password?token=" + token;
 
 			String subject = "🔐 Recuperación de contraseña";
-			String body = "<p>Hola <strong>" + usuario.getNombre() + "</strong>,</p>"
-					+ "<p>Hemos recibido una solicitud para restablecer tu contraseña.</p>"
-					+ "<p>Haz clic en el siguiente enlace para continuar:</p>" + "<p><a href='" + recoveryLink
-					+ "'>Restablecer contraseña</a></p>" + "<br><p>Este enlace expirará en 10 horas.</p>"
-					+ "<p>Si no hiciste esta solicitud, puedes ignorar este mensaje.</p>";
+			String body = """
+					<!DOCTYPE html>
+					<html lang="es">
+					<head>
+					  <meta charset="UTF-8">
+					  <style>
+					    body {
+					      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+					      background: #f4f7ff;
+					      margin: 0;
+					      padding: 0;
+					    }
+
+					    .container {
+					      max-width: 600px;
+					      margin: 40px auto;
+					      background: white;
+					      border-radius: 12px;
+					      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+					      overflow: hidden;
+					    }
+
+					    .header {
+					      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+					      color: white;
+					      padding: 24px;
+					      text-align: center;
+					      font-size: 1.8em;
+					      font-weight: bold;
+					      border-top-left-radius: 12px;
+					      border-top-right-radius: 12px;
+					    }
+
+					    .content {
+					      padding: 30px;
+					      text-align: center;
+					    }
+
+					    .btn {
+					      display: inline-block;
+					      padding: 12px 24px;
+					      margin-top: 20px;
+					      background-color: #3b82f6;
+					      color: white;
+					      border-radius: 8px;
+					      text-decoration: none;
+					      font-weight: bold;
+					    }
+
+					    .btn:hover {
+					      background-color: #2563eb;
+					    }
+
+					    .footer {
+					      font-size: 0.85em;
+					      color: #666;
+					      padding: 0 30px 30px;
+					      text-align: center;
+					    }
+
+					    a {
+					      color: #3b82f6;
+					      text-decoration: none;
+					    }
+					  </style>
+					</head>
+					<body>
+					  <div class="container">
+					    <div class="header">MultiAcueductos</div>
+					    <div class="content">
+					      <p>Hola <strong>%s</strong>,</p>
+					      <p>Hemos recibido una solicitud para restablecer tu contraseña.</p>
+					      <p>Haz clic en el siguiente botón para continuar:</p>
+					      <a href="%s" class="btn">Restablecer contraseña</a>
+					    </div>
+					    <div class="footer">
+					      <p>Este enlace expirará en 10 horas.<br>
+					      Si no hiciste esta solicitud, puedes ignorar este mensaje.</p>
+					    </div>
+					  </div>
+					</body>
+					</html>
+					""".formatted(usuario.getNombre(), recoveryLink);
 
 			emailService.sendEmail(correo, subject, body);
 
