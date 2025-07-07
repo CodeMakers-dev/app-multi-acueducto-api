@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -50,6 +53,45 @@ public class EmpresaController {
     @PostMapping
     public ResponseEntity<ResponseDTO> save(@RequestBody EmpresaDTO empresaDTO) {
         return empresaServiceImpl.save(empresaDTO);
+    }
+	
+	@Operation(summary = "Registrar Nueva Empresa y Usuario SP")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Empresa y usuario registrados exitosamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = Map.class)) }),
+            @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos (ej. ID de dirección/ciudad/departamento no existe)", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "409", description = "Conflicto: Usuario o Empresa ya existen", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @PostMapping("/registrarEmpresa")
+    public ResponseEntity<Map<String, Object>> registrarEmpresa(
+            @RequestBody Map<String, Object> jsonParams) {
+
+        try {
+            Map<String, Object> resultFromService = empresaServiceImpl.registrarEmpresa(jsonParams);
+
+            String status = String.valueOf(resultFromService.getOrDefault("statusCode", "200"));
+            HttpStatus httpStatus = switch (status) {
+                case "201" -> HttpStatus.CREATED;
+                case "400" -> HttpStatus.BAD_REQUEST;
+                case "409" -> HttpStatus.CONFLICT;
+                case "500" -> HttpStatus.INTERNAL_SERVER_ERROR;
+                default -> HttpStatus.OK;
+            };
+
+            return ResponseEntity.status(httpStatus).body(resultFromService);
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of(
+                            "message", "Error en la operación del controlador al registrar la empresa",
+                            "statusCode", "500",
+                            "error", e.getMessage()
+                    ));
+        }
     }
 
     @Operation(summary = "Buscar Empresa por id")
