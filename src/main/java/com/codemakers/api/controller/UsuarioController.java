@@ -1,5 +1,6 @@
 package com.codemakers.api.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.codemakers.api.service.impl.AutenticacionServiceImpl;
 import com.codemakers.api.service.impl.UsuarioServiceImpl;
@@ -186,4 +188,31 @@ public class UsuarioController {
     ) {
         return usuarioServiceImpl.updatePasswordByToken(token, usuarioDTO);
     }
+    @Operation(summary = "Actualizar imagen del usuario")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Imagen actualizada exitosamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "Usuario no encontrado", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Error actualizando la imagen", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) })
+    })
+    @PutMapping("/imagen/{id}")
+    public ResponseEntity<ResponseDTO> actualizarImagenUsuario(
+            @PathVariable Integer id,
+            @RequestParam("imagen") MultipartFile imagen,
+            @RequestParam("usuarioModificacion") String usuarioModificacion) {
+        try {
+            byte[] imagenBytes = imagen.getBytes();
+            return usuarioServiceImpl.updateImage(id, imagenBytes, usuarioModificacion);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ResponseDTO.builder()
+                            .success(false)
+                            .message("Error procesando la imagen")
+                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                            .build());
+        }
+    }
+
 }

@@ -18,6 +18,7 @@ import com.codemakers.commons.dtos.UsuarioDTO;
 public interface IUsuarioService {
 
 	ResponseEntity<ResponseDTO> save(UsuarioDTO usuarioDTO);
+	ResponseEntity<ResponseDTO> updateImage(Integer id, byte[] nuevaImagen, String usuarioModificacion);
     ResponseEntity<ResponseDTO> findById(Integer id);
     ResponseEntity<ResponseDTO> findAll();
     ResponseEntity<ResponseDTO> deleteById(Integer id);
