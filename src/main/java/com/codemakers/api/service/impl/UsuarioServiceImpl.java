@@ -47,6 +47,38 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final PasswordEncoder passwordEncoder;
 	private final EmailServiceImpl emailService;
 	private final JwtUtil jwtUtil;
+	
+	 
+	    public ResponseEntity<ResponseDTO> updateImage(Integer id, byte[] nuevaImagen, String usuarioModificacion) {
+	        log.info("Inicio de actualización de imagen para el usuario con ID: {}", id);
+	        try {
+	            Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(id);
+	            if (optionalUsuario.isEmpty()) {
+	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+	                        .body(ResponseDTO.builder().success(false)
+	                                .message(Constantes.USER_NOT_FOUND)
+	                                .code(HttpStatus.NOT_FOUND.value()).build());
+	            }
+
+	            UsuarioEntity usuario = optionalUsuario.get();
+	            usuario.setImagen(nuevaImagen);
+	            usuario.setFechaModificacion(new Date());
+	            usuario.setUsuarioModificacion(usuarioModificacion);
+
+	            usuarioRepository.save(usuario);
+
+	            return ResponseEntity.ok(ResponseDTO.builder().success(true)
+	                    .message("Imagen actualizada exitosamente")
+	                    .code(HttpStatus.OK.value()).build());
+
+	        } catch (Exception e) {
+	            log.error("Error al actualizar la imagen del usuario con ID: {}", id, e);
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                    .body(ResponseDTO.builder().success(false)
+	                            .message("Error actualizando la imagen")
+	                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+	        }
+	    }
 
 	public ResponseEntity<ResponseDTO> recoverPassword(String correo) {
 		log.info("Recuperación de contraseña solicitada para: {}", correo);
@@ -154,47 +186,32 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
 			emailService.sendEmail(correo, subject, body);
 
-			return ResponseEntity.ok(ResponseDTO.builder().success(true)
-					.message(Constantes.EMAIL_SEND).code(HttpStatus.OK.value()).build());
+			return ResponseEntity.ok(ResponseDTO.builder().success(true).message(Constantes.EMAIL_SEND)
+					.code(HttpStatus.OK.value()).build());
 
 		} catch (Exception e) {
 			log.error("Error durante la recuperación de contraseña para el correo {}", correo, e);
 			return buildErrorResponse(Constantes.ERROR_APPLICATION, HttpStatus.INTERNAL_SERVER_ERROR);
 		}
 	}
-	
+
 	public ResponseEntity<ResponseDTO> updatePasswordByToken(String token, UsuarioDTO usuarioDTO) {
 		log.info("Inicio de actualización de contraseña usando token");
 
 		if (token == null || token.trim().isEmpty()) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-				ResponseDTO.builder()
-					.success(false)
-					.message("Token requerido")
-					.code(HttpStatus.UNAUTHORIZED.value())
-					.build()
-			);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseDTO.builder().success(false)
+					.message("Token requerido").code(HttpStatus.UNAUTHORIZED.value()).build());
 		}
 
 		if (jwtUtil.isTokenInvalid(token)) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-				ResponseDTO.builder()
-					.success(false)
-					.message("Token inválido o expirado")
-					.code(HttpStatus.UNAUTHORIZED.value())
-					.build()
-			);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseDTO.builder().success(false)
+					.message("Token inválido o expirado").code(HttpStatus.UNAUTHORIZED.value()).build());
 		}
 
 		String username = jwtUtil.getUsernameFromToken(token);
 		if (username == null) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
-				ResponseDTO.builder()
-					.success(false)
-					.message("Token expirado o sin usuario válido")
-					.code(HttpStatus.UNAUTHORIZED.value())
-					.build()
-			);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseDTO.builder().success(false)
+					.message("Token expirado o sin usuario válido").code(HttpStatus.UNAUTHORIZED.value()).build());
 		}
 
 		return usuarioRepository.findByNombre(username).map(usuario -> {
@@ -202,48 +219,30 @@ public class UsuarioServiceImpl implements IUsuarioService {
 
 			String passwordRegex = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&\\-_.])[A-Za-z\\d@$!%*?&\\-_.]{8,}$";
 			if (nuevaContrasena == null || !nuevaContrasena.matches(passwordRegex)) {
-				return ResponseEntity.badRequest().body(
-					ResponseDTO.builder()
-						.success(false)
-						.message("La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
-						.code(HttpStatus.BAD_REQUEST.value())
-						.build()
-				);
+				return ResponseEntity.badRequest().body(ResponseDTO.builder().success(false).message(
+						"La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, un número y un carácter especial.")
+						.code(HttpStatus.BAD_REQUEST.value()).build());
 			}
 
 			if (passwordEncoder.matches(nuevaContrasena, usuario.getContrasena())) {
-				return ResponseEntity.badRequest().body(
-					ResponseDTO.builder()
-						.success(false)
-						.message("La nueva contraseña debe ser diferente a la actual.")
-						.code(HttpStatus.BAD_REQUEST.value())
-						.build()
-				);
+				return ResponseEntity.badRequest()
+						.body(ResponseDTO.builder().success(false)
+								.message("La nueva contraseña debe ser diferente a la actual.")
+								.code(HttpStatus.BAD_REQUEST.value()).build());
 			}
 
 			usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
 			usuario.setFechaModificacion(new Date());
-			usuario.setUsuarioModificacion("Recuperación vía token"); 
+			usuario.setUsuarioModificacion("Recuperación vía token");
 
 			usuarioRepository.save(usuario);
 
-			jwtUtil.invalidateToken(token); 
-			return ResponseEntity.ok(
-				ResponseDTO.builder()
-					.success(true)
-					.message("Contraseña actualizada exitosamente")
-					.code(HttpStatus.OK.value())
-					.build()
-			);
-		}).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-			ResponseDTO.builder()
-				.success(false)
-				.message("Usuario no encontrado")
-				.code(HttpStatus.NOT_FOUND.value())
-				.build()
-		));
+			jwtUtil.invalidateToken(token);
+			return ResponseEntity.ok(ResponseDTO.builder().success(true).message("Contraseña actualizada exitosamente")
+					.code(HttpStatus.OK.value()).build());
+		}).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(ResponseDTO.builder().success(false)
+				.message("Usuario no encontrado").code(HttpStatus.NOT_FOUND.value()).build()));
 	}
-
 
 	@Override
 	@Transactional
