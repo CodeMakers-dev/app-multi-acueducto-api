@@ -96,14 +96,14 @@ public class EmpresaServiceImpl implements IEmpresaService{
                 return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
             }
 
-            return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+            return Map.of(Constantes.ERROR_KEY, "El resultado no pudo ser procesado correctamente.");
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
-            return Collections.singletonMap("error", "Error de procesamiento JSON: " + e.getMessage());
+            return Collections.singletonMap(Constantes.ERROR_KEY, "Error de procesamiento JSON: " + e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
-            return Collections.singletonMap("error", "Error inesperado: " + e.getMessage());
+            return Collections.singletonMap(Constantes.ERROR_KEY, "Error inesperado: " + e.getMessage());
         }
     }
     
