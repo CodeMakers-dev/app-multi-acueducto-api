@@ -1,6 +1,9 @@
 package com.codemakers.api.service.impl;
 
+import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -49,36 +52,44 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final JwtUtil jwtUtil;
 	
 	 
-	    public ResponseEntity<ResponseDTO> updateImage(Integer id, byte[] nuevaImagen, String usuarioModificacion) {
-	        log.info("Inicio de actualización de imagen para el usuario con ID: {}", id);
-	        try {
-	            Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(id);
-	            if (optionalUsuario.isEmpty()) {
-	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                        .body(ResponseDTO.builder().success(false)
-	                                .message(Constantes.USER_NOT_FOUND)
-	                                .code(HttpStatus.NOT_FOUND.value()).build());
-	            }
-
-	            UsuarioEntity usuario = optionalUsuario.get();
-	            usuario.setImagen(nuevaImagen);
-	            usuario.setFechaModificacion(new Date());
-	            usuario.setUsuarioModificacion(usuarioModificacion);
-
-	            usuarioRepository.save(usuario);
-
-	            return ResponseEntity.ok(ResponseDTO.builder().success(true)
-	                    .message("Imagen actualizada exitosamente")
-	                    .code(HttpStatus.OK.value()).build());
-
-	        } catch (Exception e) {
-	            log.error("Error al actualizar la imagen del usuario con ID: {}", id, e);
-	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	public ResponseEntity<ResponseDTO> updateImage(Integer id, byte[] nuevaImagen, String usuarioModificacion) {
+	    log.info("Inicio de actualización de imagen para el usuario con ID: {}", id);
+	    try {
+	        Optional<UsuarioEntity> optionalUsuario = usuarioRepository.findById(id);
+	        if (optionalUsuario.isEmpty()) {
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND)
 	                    .body(ResponseDTO.builder().success(false)
-	                            .message("Error actualizando la imagen")
-	                            .code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
+	                            .message(Constantes.USER_NOT_FOUND)
+	                            .code(HttpStatus.NOT_FOUND.value()).build());
 	        }
+
+	        UsuarioEntity usuario = optionalUsuario.get();
+	        usuario.setImagen(nuevaImagen);
+	        usuario.setFechaModificacion(new Date());
+	        usuario.setUsuarioModificacion(usuarioModificacion);
+
+	        usuarioRepository.save(usuario);
+
+	        String imagenBase64 = Base64.getEncoder().encodeToString(nuevaImagen);
+	        Map<String, Object> responseData = new HashMap<>();
+	        responseData.put("imagenBase64", imagenBase64);
+
+	        return ResponseEntity.ok(ResponseDTO.builder()
+	                .success(true)
+	                .message("Imagen actualizada exitosamente")
+	                .code(HttpStatus.OK.value())
+	                .response(responseData)
+	                .build());
+
+	    } catch (Exception e) {
+	        log.error("Error al actualizar la imagen del usuario con ID: {}", id, e);
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+	                .body(ResponseDTO.builder().success(false)
+	                        .message("Error actualizando la imagen")
+	                        .code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build());
 	    }
+	}
+
 
 	public ResponseEntity<ResponseDTO> recoverPassword(String correo) {
 		log.info("Recuperación de contraseña solicitada para: {}", correo);
