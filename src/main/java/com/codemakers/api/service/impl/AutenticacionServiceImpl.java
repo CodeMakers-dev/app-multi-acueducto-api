@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.codemakers.api.config.InvalidCredentialsException;
 import com.codemakers.api.config.JwtUtil;
 import com.codemakers.api.config.UserNotFoundException;
+import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
 import com.codemakers.commons.dtos.VigenciaUsuarioDTO;
@@ -61,6 +62,9 @@ public class AutenticacionServiceImpl {
             vigenciaEntity.setUsuarioCreacion(usuario.getNombre());
             vigenciaEntity.setFechaCreacion(fechaActual);
             vigenciaEntity.setActivo(true);
+            PersonaDTO personaDTO = new PersonaDTO();
+            personaDTO.setId(usuario.getPersona().getId());
+            personaDTO.setNombre(usuario.getPersona().getNombre());
             vigenciaUsuarioRepository.save(vigenciaEntity);
             VigenciaUsuarioDTO vigenciaDTO = VigenciaUsuarioDTO.builder()
                     .id(vigenciaEntity.getId())
@@ -71,7 +75,7 @@ public class AutenticacionServiceImpl {
                             .nombre(usuario.getNombre())
                             .activo(usuario.getActivo())
                             .imagen(usuario.getImagen())
-                            .persona(usuario.getPersona())
+                            .persona(personaDTO)
                             .build())
                     .usuarioCreacion(vigenciaEntity.getUsuarioCreacion())
                     .fechaCreacion(vigenciaEntity.getFechaCreacion())
