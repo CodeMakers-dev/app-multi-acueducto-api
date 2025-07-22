@@ -177,13 +177,48 @@ public class FacturaServiceImpl implements IFacturaService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
+	
 
-    @Override
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ResponseDTO> findAll() {
+	    log.info("Listar todos las facturas");
+	    try {
+	        var list = facturaRepository.findAll();
+
+	        var dtoList = facturaMapper.listEntityToResumenDtoList(list);
+
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                .code(HttpStatus.OK.value())
+	                .response(dtoList)
+	                .build();
+
+	        return ResponseEntity.ok(responseDTO);
+	    } catch (Exception e) {
+	        log.error("Error al listar las facturas", e);
+
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.CONSULTING_ERROR)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .response(null)
+	                .build();
+
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
+
+  /* @Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las facturas");
         try {
             var list = facturaRepository.findAll();
+            
             var dtoList = facturaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
@@ -202,7 +237,9 @@ public class FacturaServiceImpl implements IFacturaService{
                     .build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
-    }
+    }*/
+
+  
 
     @Override
     @Transactional
@@ -255,11 +292,11 @@ public class FacturaServiceImpl implements IFacturaService{
 
             Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
 
-            // Obtener el campo "value" del resultado
+          
             Object wrappedValue = rawResult.get("generar_factura");
             if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
                 String jsonValue = pgObject.getValue();
-                // Deserializar a Map
+                
                 return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
             }
 
