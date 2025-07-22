@@ -22,6 +22,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.codemakers.api.service.impl.AutenticacionServiceImpl;
 import com.codemakers.api.service.impl.UsuarioServiceImpl;
 import com.codemakers.commons.dtos.LoginRequestDTO;
+import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.UpdatePasswordDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
@@ -213,6 +214,20 @@ public class UsuarioController {
                             .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
                             .build());
         }
+    }
+    @Operation(summary = "Crear usuario y enviar correo")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Usuario creado y correo enviado", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        @ApiResponse(responseCode = "400", description = "Solicitud inválida", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) })
+    })
+    @PostMapping("/enviarCorreo")
+    public ResponseEntity<ResponseDTO> crearUsuarioYEnviarCorreo(
+            @RequestBody PersonaDTO personaDTO){
+        return usuarioServiceImpl.crearUsuarioYEnviarCorreo(personaDTO);
     }
 
 }
