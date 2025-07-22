@@ -2,6 +2,7 @@ package com.codemakers.api.service.impl;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -185,13 +186,14 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	        Optional<EmpresaEntity> empresa = empresaRepository.findByUsuario_Id(idUsuario);
 
 	        if (empresa.isPresent()) {
-	            EmpresaDTO dto = empresaMapper.entityToDto(empresa.get());
+	            Map<String, Object> responseMap = new HashMap<>();
+	            responseMap.put("idEmpresa", empresa.get().getId());
 
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
 	                    .code(HttpStatus.OK.value())
-	                    .response(dto)
+	                    .response(responseMap)
 	                    .build();
 
 	            return ResponseEntity.ok(responseDTO);
@@ -214,6 +216,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
+
 
     @Override
     @Transactional(readOnly = true)
