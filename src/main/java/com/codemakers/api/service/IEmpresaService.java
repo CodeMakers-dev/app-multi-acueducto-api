@@ -9,9 +9,11 @@ public interface IEmpresaService {
 	
 	ResponseEntity<ResponseDTO> save(EmpresaDTO empresaDTO);
 	
-	ResponseEntity<ResponseDTO> update(EmpresaDTO empresaDTO); 
+	ResponseEntity<ResponseDTO> update(EmpresaDTO empresaDTO);
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
+    
+    ResponseEntity<ResponseDTO> findByUsuarioId(Integer idUsuario);
     
     ResponseEntity<ResponseDTO> findAll();
     

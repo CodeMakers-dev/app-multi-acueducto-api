@@ -176,6 +176,44 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ResponseDTO> findByUsuarioId(Integer idUsuario) {
+	    log.info("Buscar Empresa por id de usuario: {}", idUsuario);
+	    try {
+	        Optional<EmpresaEntity> empresa = empresaRepository.findByUsuario_Id(idUsuario);
+
+	        if (empresa.isPresent()) {
+	            EmpresaDTO dto = empresaMapper.entityToDto(empresa.get());
+
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(true)
+	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                    .code(HttpStatus.OK.value())
+	                    .response(dto)
+	                    .build();
+
+	            return ResponseEntity.ok(responseDTO);
+	        } else {
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(false)
+	                    .message("No se encontró una empresa asociada al usuario")
+	                    .code(HttpStatus.NOT_FOUND.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+	        }
+
+	    } catch (Exception e) {
+	        log.error("Error al buscar empresa por id de usuario: {}", idUsuario, e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
 
     @Override
     @Transactional(readOnly = true)
