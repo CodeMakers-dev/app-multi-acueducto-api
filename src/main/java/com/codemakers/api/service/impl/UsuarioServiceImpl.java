@@ -54,6 +54,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final PasswordEncoder passwordEncoder;
 	private final EmailServiceImpl emailService;
 	private final JwtUtil jwtUtil;
+	private static final Random RANDOM = new Random();
 
 	@Override
 	@Transactional
@@ -486,10 +487,10 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	}
 
 	private String generarNombreUsuario(PersonaDTO persona) {
-		String nombre = persona.getNombre() != null ? persona.getNombre().toLowerCase() : "user";
-		String apellido = persona.getApellido() != null ? persona.getApellido().toLowerCase() : "anon";
-		int numero = new Random().nextInt(1000);
-		return nombre.charAt(0) + apellido + numero;
+	    String nombre = persona.getNombre() != null ? persona.getNombre().toLowerCase() : "user";
+	    String apellido = persona.getApellido() != null ? persona.getApellido().toLowerCase() : "anon";
+	    int numero = RANDOM.nextInt(1000);
+	    return nombre.charAt(0) + apellido + numero;
 	}
 
 	private String generarPasswordAleatoria() {
