@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.codemakers.api.service.impl.EmpleadoEmpresaServiceImpl;
-import com.codemakers.commons.dtos.EmpleadoEmpresaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -54,9 +56,20 @@ public class EmpleadoEmpresaController {
 	        @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
-    @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody EmpleadoEmpresaDTO empleadoEmpresaDTO) {
-        return empleadoEmpresaServiceImpl.save(empleadoEmpresaDTO);
+	@PostMapping("/save")
+    public ResponseEntity<Map<String, Object>> guardarEmpleado(@RequestBody Map<String, Object> jsonParams) {
+        try {
+            Map<String, Object> resultado = empleadoEmpresaServiceImpl.save(jsonParams);
+            
+            if (resultado.containsKey("error")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+            }
+
+            return ResponseEntity.ok(resultado);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                 .body(Map.of("error", "Error interno del servidor"));
+        }
     }
 
     @Operation(summary = "Buscar empleado empresa por id")

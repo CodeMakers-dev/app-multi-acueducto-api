@@ -27,6 +27,7 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	private final EmpresaClienteContadorRepository empresaClienteContadorRepository;
 	private final EmpresaClienteContadorMapper empresaClienteContadorMapper;
 	
+	
 	@Override
 	@Transactional
 	public ResponseEntity<ResponseDTO> save(EmpresaClienteContadorDTO empresaClienteContadorDTO) {

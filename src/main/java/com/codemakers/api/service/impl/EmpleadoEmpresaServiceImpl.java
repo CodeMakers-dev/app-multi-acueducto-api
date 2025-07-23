@@ -1,26 +1,26 @@
 package com.codemakers.api.service.impl;
 
-import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpleadoEmpresaService;
-import com.codemakers.commons.dtos.DireccionDTO;
 import com.codemakers.commons.dtos.EmpleadoEmpresaDTO;
-import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.entities.EmpleadoEmpresaEntity;
-import com.codemakers.commons.entities.EmpresaEntity;
-import com.codemakers.commons.entities.PersonaEntity;
 import com.codemakers.commons.maps.EmpleadoEmpresaMapper;
 import com.codemakers.commons.repositories.EmpleadoEmpresaRepository;
-import com.codemakers.commons.repositories.EmpresaRepository;
-import com.codemakers.commons.repositories.PersonaRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,100 +38,40 @@ import lombok.extern.slf4j.Slf4j;
 public class EmpleadoEmpresaServiceImpl implements IEmpleadoEmpresaService {
 
 	private final EmpleadoEmpresaRepository empleadoEmpresaRepository;
-	private final EmpresaRepository empresaRepository;
-	private final PersonaRepository personaRepository;
 	private final EmpleadoEmpresaMapper empleadoEmpresaMapper;
-	private final PersonaServiceImpl personaServiceImpl;
-	private final DireccionServiceImpl direccionServiceImpl;
+	private final ObjectMapper objectMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	
-
-	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(EmpleadoEmpresaDTO empleadoEmpresaDTO) {
-	    log.info("Guardar/Actualizar Empleado Empresa");
-
+	public Map<String, Object> save(Map<String, Object> jsonParams) {
 	    try {
-	        boolean isUpdate = isUpdate(empleadoEmpresaDTO);
-	        EmpleadoEmpresaEntity entity = buildEmpleadoEmpresaEntity(empleadoEmpresaDTO, isUpdate);
+	        String jsonString = objectMapper.writeValueAsString(jsonParams);
 
-	        ResponseEntity<ResponseDTO> direccionResponse = guardarDireccionSiExiste(empleadoEmpresaDTO.getPersona());
-	        if (direccionResponse != null) return direccionResponse;
+	        String sql = "SELECT * FROM public.guardar_empleado_completo(CAST(:jsonData AS jsonb))";
 
-	        ResponseEntity<ResponseDTO> personaResponse = guardarPersonaSiExiste(empleadoEmpresaDTO.getPersona(), entity);
-	        if (personaResponse != null) return personaResponse;
+	        MapSqlParameterSource parameters = new MapSqlParameterSource();
+	        parameters.addValue("jsonData", jsonString);
 
-	        setEmpresaSiExiste(empleadoEmpresaDTO, entity);
+	        Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
 
-	        EmpleadoEmpresaEntity saved = empleadoEmpresaRepository.save(entity);
-	        EmpleadoEmpresaDTO savedDTO = empleadoEmpresaMapper.entityToDto(saved);
+	        Object wrappedValue = rawResult.get("guardar_empleado_completo");
+	        if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+	            String jsonValue = pgObject.getValue();
+	            return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+	        }
 
-	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
-	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
+	        return Map.of("error", "El resultado no pudo ser procesado correctamente.");
 
-	        return ResponseEntity.status(statusCode).body(
-	                ResponseDTO.builder().success(true).message(message).code(statusCode).response(savedDTO).build());
-
+	    } catch (JsonProcessingException e) {
+	        log.error("Error de procesamiento JSON", e);
+	        return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
 	    } catch (Exception e) {
-	        log.error("Error guardando empleado empresa", e);
-	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-	                ResponseDTO.builder().success(false).message(Constantes.SAVE_ERROR)
-	                        .code(HttpStatus.BAD_REQUEST.value()).build());
-	    }
-	}
-	private boolean isUpdate(EmpleadoEmpresaDTO dto) {
-	    return dto.getId() != null && empleadoEmpresaRepository.existsById(dto.getId());
-	}
-
-	private EmpleadoEmpresaEntity buildEmpleadoEmpresaEntity(EmpleadoEmpresaDTO dto, boolean isUpdate) {
-	    EmpleadoEmpresaEntity entity;
-	    if (isUpdate) {
-	        entity = empleadoEmpresaRepository.findById(dto.getId()).orElseThrow();
-	        empleadoEmpresaMapper.updateEntityFromDto(dto, entity);
-	        entity.setFechaModificacion(new Date());
-	        entity.setUsuarioModificacion(dto.getUsuarioModificacion());
-	    } else {
-	        entity = empleadoEmpresaMapper.dtoToEntity(dto);
-	        entity.setFechaCreacion(new Date());
-	        entity.setUsuarioCreacion(dto.getUsuarioCreacion());
-	        entity.setActivo(true);
-	    }
-	    return entity;
-	}
-
-	private ResponseEntity<ResponseDTO> guardarDireccionSiExiste(PersonaDTO personaDTO) {
-	    if (personaDTO != null && personaDTO.getDireccion() != null) {
-	        ResponseEntity<ResponseDTO> response = direccionServiceImpl.save(personaDTO.getDireccion());
-	        if (!Boolean.TRUE.equals(response.getBody().getSuccess())) {
-	            return response;
-	        }
-	        DireccionDTO direccionGuardada = (DireccionDTO) response.getBody().getResponse();
-	        personaDTO.setDireccion(direccionGuardada);
-	    }
-	    return null;
-	}
-
-	private ResponseEntity<ResponseDTO> guardarPersonaSiExiste(PersonaDTO personaDTO, EmpleadoEmpresaEntity entity) {
-	    if (personaDTO != null) {
-	        ResponseEntity<ResponseDTO> response = personaServiceImpl.save(personaDTO);
-	        if (!Boolean.TRUE.equals(response.getBody().getSuccess())) {
-	            return response;
-	        }
-	        PersonaDTO personaGuardada = (PersonaDTO) response.getBody().getResponse();
-	        PersonaEntity personaEntity = personaRepository.findById(personaGuardada.getId())
-	                .orElseThrow(() -> new RuntimeException("Persona no encontrada después de guardar"));
-	        entity.setPersona(personaEntity);
-	    }
-	    return null;
-	}
-
-	private void setEmpresaSiExiste(EmpleadoEmpresaDTO dto, EmpleadoEmpresaEntity entity) {
-	    if (dto.getEmpresa() != null && dto.getEmpresa().getId() != null) {
-	        EmpresaEntity empresa = empresaRepository.findById(dto.getEmpresa().getId())
-	                .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
-	        entity.setEmpresa(empresa);
+	        log.error("Error inesperado en guardarEmpleado", e);
+	        return Map.of("error", "Error inesperado: " + e.getMessage());
 	    }
 	}
 
+	
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
