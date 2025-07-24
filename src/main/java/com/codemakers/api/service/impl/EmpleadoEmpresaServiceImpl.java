@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpleadoEmpresaService;
-import com.codemakers.commons.dtos.EmpleadoEmpresaDTO;
+import com.codemakers.commons.dtos.EmpleadoEmpresaResponseDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.entities.EmpleadoEmpresaEntity;
 import com.codemakers.commons.maps.EmpleadoEmpresaMapper;
@@ -41,37 +41,67 @@ public class EmpleadoEmpresaServiceImpl implements IEmpleadoEmpresaService {
 	private final EmpleadoEmpresaMapper empleadoEmpresaMapper;
 	private final ObjectMapper objectMapper;
 	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-	
+
 	@Transactional
 	public Map<String, Object> save(Map<String, Object> jsonParams) {
-	    try {
-	        String jsonString = objectMapper.writeValueAsString(jsonParams);
+		try {
+			String jsonString = objectMapper.writeValueAsString(jsonParams);
 
-	        String sql = "SELECT * FROM public.guardar_empleado_completo(CAST(:jsonData AS jsonb))";
+			String sql = "SELECT * FROM public.guardar_empleado_completo(CAST(:jsonData AS jsonb))";
 
-	        MapSqlParameterSource parameters = new MapSqlParameterSource();
-	        parameters.addValue("jsonData", jsonString);
+			MapSqlParameterSource parameters = new MapSqlParameterSource();
+			parameters.addValue("jsonData", jsonString);
 
-	        Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+			Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
 
-	        Object wrappedValue = rawResult.get("guardar_empleado_completo");
-	        if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
-	            String jsonValue = pgObject.getValue();
-	            return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
-	        }
+			Object wrappedValue = rawResult.get("guardar_empleado_completo");
+			if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+				String jsonValue = pgObject.getValue();
+				return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {
+				});
+			}
 
-	        return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+			return Map.of("error", "El resultado no pudo ser procesado correctamente.");
 
-	    } catch (JsonProcessingException e) {
-	        log.error("Error de procesamiento JSON", e);
-	        return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
-	    } catch (Exception e) {
-	        log.error("Error inesperado en guardarEmpleado", e);
-	        return Map.of("error", "Error inesperado: " + e.getMessage());
-	    }
+		} catch (JsonProcessingException e) {
+			log.error("Error de procesamiento JSON", e);
+			return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+		} catch (Exception e) {
+			log.error("Error inesperado en guardarEmpleado", e);
+			return Map.of("error", "Error inesperado: " + e.getMessage());
+		}
 	}
 
-	
+	@Transactional
+	public Map<String, Object> update(Map<String, Object> jsonParams) {
+		try {
+			String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+			String sql = "SELECT * FROM public.actualizar_empleado(CAST(:jsonData AS jsonb))";
+
+			MapSqlParameterSource parameters = new MapSqlParameterSource();
+			parameters.addValue("jsonData", jsonString);
+
+			Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+			Object wrappedValue = rawResult.get("actualizar_empleado");
+			if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+				String jsonValue = pgObject.getValue();
+				return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {
+				});
+			}
+
+			return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+
+		} catch (JsonProcessingException e) {
+			log.error("Error de procesamiento JSON", e);
+			return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+		} catch (Exception e) {
+			log.error("Error inesperado en actualizarEmpleado", e);
+			return Map.of("error", "Error inesperado: " + e.getMessage());
+		}
+	}
+
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
@@ -79,19 +109,29 @@ public class EmpleadoEmpresaServiceImpl implements IEmpleadoEmpresaService {
 		try {
 			Optional<EmpleadoEmpresaEntity> empleadoEmpresa = empleadoEmpresaRepository.findById(id);
 			if (empleadoEmpresa.isPresent()) {
-				EmpleadoEmpresaDTO dto = empleadoEmpresaMapper.entityToDto(empleadoEmpresa.get());
-				ResponseDTO responseDTO = ResponseDTO.builder().success(true).message(Constantes.CONSULTED_SUCCESSFULLY)
-						.code(HttpStatus.OK.value()).response(dto).build();
+				EmpleadoEmpresaResponseDTO dto = empleadoEmpresaMapper.entityToResumenDto(empleadoEmpresa.get());
+				ResponseDTO responseDTO = ResponseDTO.builder()
+						.success(true)
+						.message(Constantes.CONSULTED_SUCCESSFULLY)
+						.code(HttpStatus.OK.value())
+						.response(dto)
+						.build();
 				return ResponseEntity.ok(responseDTO);
 			} else {
-				ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.CONSULTING_ERROR)
-						.code(HttpStatus.NOT_FOUND.value()).build();
+				ResponseDTO responseDTO = ResponseDTO.builder()
+						.success(false)
+						.message(Constantes.CONSULTING_ERROR)
+						.code(HttpStatus.NOT_FOUND.value())
+						.build();
 				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 			}
 		} catch (Exception e) {
 			log.error("Error al buscar empleado empresa por id: {}", id, e);
-			ResponseDTO responseDTO = ResponseDTO.builder().success(false).message(Constantes.ERROR_QUERY_RECORD_BY_ID)
-					.code(HttpStatus.INTERNAL_SERVER_ERROR.value()).build();
+			ResponseDTO responseDTO = ResponseDTO.builder()
+					.success(false)
+					.message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+					.code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+					.build();
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 		}
 	}
@@ -135,7 +175,5 @@ public class EmpleadoEmpresaServiceImpl implements IEmpleadoEmpresaService {
 			return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 		}
 	}
-	
-	
 
 }
