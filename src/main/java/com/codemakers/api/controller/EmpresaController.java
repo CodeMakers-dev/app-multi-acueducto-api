@@ -94,7 +94,7 @@ public class EmpresaController {
         }
     }
 
-    @Operation(summary = "Buscar Empresa por id")
+    @Operation(summary = "Buscar Empresa por id de usuario")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
