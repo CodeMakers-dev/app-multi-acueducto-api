@@ -224,7 +224,7 @@ public class UsuarioController {
         @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
             @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) })
     })
-    @PostMapping("/enviarCorreo")
+    @PostMapping("/sendEmail")
     public ResponseEntity<ResponseDTO> crearUsuarioYEnviarCorreo(
             @RequestBody PersonaDTO personaDTO){
         return usuarioServiceImpl.crearUsuarioYEnviarCorreo(personaDTO);

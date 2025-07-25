@@ -212,7 +212,7 @@ public class FacturaServiceImpl implements IFacturaService{
 	    }
 	}
 
-  /* @Override
+ /* @Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las facturas");

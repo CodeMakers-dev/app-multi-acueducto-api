@@ -2,7 +2,6 @@ package com.codemakers.api.service;
 
 import org.springframework.http.ResponseEntity;
 
-import com.codemakers.commons.dtos.EmpleadoEmpresaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 
 /**
@@ -16,7 +15,7 @@ import com.codemakers.commons.dtos.ResponseDTO;
  */
 public interface IEmpleadoEmpresaService {
 
-	ResponseEntity<ResponseDTO> save(EmpleadoEmpresaDTO empleadoEmpresaDTO);
+	
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
     
