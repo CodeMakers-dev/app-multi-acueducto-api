@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -51,6 +54,42 @@ public class EmpresaClienteContadorController {
     public ResponseEntity<ResponseDTO> save(@RequestBody EmpresaClienteContadorDTO empresaClienteContadorDTO) {
         return empresaClienteContadorServiceImpl.save(empresaClienteContadorDTO);
     }
+     @Operation(summary = "Actualizar estado activo/inactivo de persona y sus relaciones")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "404", description = "La persona no fue encontrada", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "400", description = "Error de solicitud", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        })
+        @PostMapping("/estado")
+        public ResponseEntity<Map<String, Object>> actualizarEstado(
+                        @RequestBody Map<String, Object> jsonParams) {
+                try {
+                        Map<String, Object> resultado = empresaClienteContadorServiceImpl.actualizarEstado(jsonParams);
+
+                        if (resultado.containsKey("statusCode")) {
+                                int status = (int) resultado.get("statusCode");
+
+                                return switch (status) {
+                                        case 404 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+                                        case 500 ->
+                                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
+                                        default -> ResponseEntity.ok(resultado);
+                                };
+                        }
+
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(Map.of("error", "Respuesta inesperada del servidor"));
+
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(Map.of("error", "Error interno del servidor"));
+                }
+        }
 	
 	@Operation(summary = "Buscar Empresa Cliente Contador por id de la empresa")
     @ApiResponses(value = {
