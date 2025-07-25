@@ -1,10 +1,14 @@
 package com.codemakers.api.service.impl;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.Optional;
 
+import org.postgresql.util.PGobject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,6 +19,9 @@ import com.codemakers.commons.entities.EmpresaClienteContadorEntity;
 import com.codemakers.commons.maps.EmpresaClienteContadorMapper;
 import com.codemakers.commons.repositories.EmpresaClienteContadorRepository;
 import com.codemakers.commons.utils.Constantes;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +33,8 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	
 	private final EmpresaClienteContadorRepository empresaClienteContadorRepository;
 	private final EmpresaClienteContadorMapper empresaClienteContadorMapper;
+    private final ObjectMapper objectMapper;
+	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 	
 	
 	@Override
@@ -76,7 +85,35 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	        );
 	    }
 	}
-	
+	@Transactional
+	public Map<String, Object> actualizarEstado(Map<String, Object> jsonParams) {
+		try {
+			String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+			String sql = "SELECT * FROM public.actualizar_estado(CAST(:jsonData AS jsonb))";
+
+			MapSqlParameterSource parameters = new MapSqlParameterSource();
+			parameters.addValue("jsonData", jsonString);
+
+			Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+			Object wrappedValue = rawResult.get("actualizar_estado");
+			if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+				String jsonValue = pgObject.getValue();
+				return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {
+				});
+			}
+
+			return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+
+		} catch (JsonProcessingException e) {
+			log.error("Error de procesamiento JSON", e);
+			return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+		} catch (Exception e) {
+			log.error("Error inesperado en actualizarEstadoPersona", e);
+			return Map.of("error", "Error inesperado: " + e.getMessage());
+		}
+	}
     @Override
     @Transactional
     public ResponseEntity<ResponseDTO> update(EmpresaClienteContadorDTO empresaClienteContadorDTO) {
