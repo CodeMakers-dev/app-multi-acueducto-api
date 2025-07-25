@@ -102,6 +102,36 @@ public class EmpleadoEmpresaServiceImpl implements IEmpleadoEmpresaService {
 		}
 	}
 
+	@Transactional
+	public Map<String, Object> actualizarEstadoPersona(Map<String, Object> jsonParams) {
+		try {
+			String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+			String sql = "SELECT * FROM public.actualizar_estado_por_persona(CAST(:jsonData AS jsonb))";
+
+			MapSqlParameterSource parameters = new MapSqlParameterSource();
+			parameters.addValue("jsonData", jsonString);
+
+			Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+			Object wrappedValue = rawResult.get("actualizar_estado_por_persona");
+			if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+				String jsonValue = pgObject.getValue();
+				return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {
+				});
+			}
+
+			return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+
+		} catch (JsonProcessingException e) {
+			log.error("Error de procesamiento JSON", e);
+			return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+		} catch (Exception e) {
+			log.error("Error inesperado en actualizarEstadoPersona", e);
+			return Map.of("error", "Error inesperado: " + e.getMessage());
+		}
+	}
+
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
