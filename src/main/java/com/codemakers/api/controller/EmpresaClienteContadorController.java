@@ -1,5 +1,8 @@
 package com.codemakers.api.controller;
 
+import java.util.Map;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -33,6 +36,35 @@ import lombok.RequiredArgsConstructor;
 public class EmpresaClienteContadorController {
 
     private final EmpresaClienteContadorServiceImpl empresaClienteContadorServiceImpl;
+
+    @Operation(summary = "Guardar cliente empresa contador")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        })
+        @PostMapping("/save")
+        public ResponseEntity<Map<String, Object>> saveClient(@RequestBody Map<String, Object> jsonParams) {
+                try {
+                        Map<String, Object> resultado = empresaClienteContadorServiceImpl.saveClient(jsonParams);
+
+                        if (resultado.containsKey("error")) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+                        }
+
+                        return ResponseEntity.ok(resultado);
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(Map.of("error", "Error interno del servidor"));
+                }
+        }
 	
 	@Operation(summary = "Guardar  Empresa Cliente Contador")
 	@ApiResponses(value = {
@@ -51,6 +83,42 @@ public class EmpresaClienteContadorController {
     public ResponseEntity<ResponseDTO> save(@RequestBody EmpresaClienteContadorDTO empresaClienteContadorDTO) {
         return empresaClienteContadorServiceImpl.save(empresaClienteContadorDTO);
     }
+     @Operation(summary = "Actualizar estado activo/inactivo de persona y sus relaciones")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "404", description = "La persona no fue encontrada", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "400", description = "Error de solicitud", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        })
+        @PostMapping("/estado")
+        public ResponseEntity<Map<String, Object>> actualizarEstado(
+                        @RequestBody Map<String, Object> jsonParams) {
+                try {
+                        Map<String, Object> resultado = empresaClienteContadorServiceImpl.actualizarEstado(jsonParams);
+
+                        if (resultado.containsKey("statusCode")) {
+                                int status = (int) resultado.get("statusCode");
+
+                                return switch (status) {
+                                        case 404 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+                                        case 500 ->
+                                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
+                                        default -> ResponseEntity.ok(resultado);
+                                };
+                        }
+
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(Map.of("error", "Respuesta inesperada del servidor"));
+
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(Map.of("error", "Error interno del servidor"));
+                }
+        }
 	
 	@Operation(summary = "Buscar Empresa Cliente Contador por id de la empresa")
     @ApiResponses(value = {

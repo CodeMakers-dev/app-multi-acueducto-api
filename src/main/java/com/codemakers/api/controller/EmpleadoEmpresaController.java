@@ -73,6 +73,43 @@ public class EmpleadoEmpresaController {
                 }
         }
 
+        @Operation(summary = "Actualizar estado activo/inactivo de persona y sus relaciones")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "200", description = "Estado actualizado correctamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "404", description = "La persona no fue encontrada", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "400", description = "Error de solicitud", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "500", description = "Error interno del servidor", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        })
+        @PostMapping("/estado")
+        public ResponseEntity<Map<String, Object>> actualizarEstadoEmpleado(
+                        @RequestBody Map<String, Object> jsonParams) {
+                try {
+                        Map<String, Object> resultado = empleadoEmpresaServiceImpl.actualizarEstadoPersona(jsonParams);
+
+                        if (resultado.containsKey("statusCode")) {
+                                int status = (int) resultado.get("statusCode");
+
+                                return switch (status) {
+                                        case 404 -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+                                        case 500 ->
+                                                ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(resultado);
+                                        default -> ResponseEntity.ok(resultado);
+                                };
+                        }
+
+                        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                                        .body(Map.of("error", "Respuesta inesperada del servidor"));
+
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(Map.of("error", "Error interno del servidor"));
+                }
+        }
+
         @Operation(summary = "Actualizar empleado empresa")
         @ApiResponses(value = {
                         @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
