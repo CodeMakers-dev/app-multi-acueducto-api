@@ -36,6 +36,35 @@ import lombok.RequiredArgsConstructor;
 public class EmpresaClienteContadorController {
 
     private final EmpresaClienteContadorServiceImpl empresaClienteContadorServiceImpl;
+
+    @Operation(summary = "Guardar cliente empresa contador")
+        @ApiResponses(value = {
+                        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                        @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                                        @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        })
+        @PostMapping("/save")
+        public ResponseEntity<Map<String, Object>> saveClient(@RequestBody Map<String, Object> jsonParams) {
+                try {
+                        Map<String, Object> resultado = empresaClienteContadorServiceImpl.saveClient(jsonParams);
+
+                        if (resultado.containsKey("error")) {
+                                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+                        }
+
+                        return ResponseEntity.ok(resultado);
+                } catch (Exception e) {
+                        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                        .body(Map.of("error", "Error interno del servidor"));
+                }
+        }
 	
 	@Operation(summary = "Guardar  Empresa Cliente Contador")
 	@ApiResponses(value = {
