@@ -8,12 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.service.ITelefonoEmpresaService;
+import com.codemakers.api.service.ICorreoGeneralService;
+import com.codemakers.commons.dtos.CorreoGeneralDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TelefonoEmpresaDTO;
-import com.codemakers.commons.entities.TelefonoEmpresaEntity;
-import com.codemakers.commons.maps.TelefonoEmpresaMapper;
-import com.codemakers.commons.repositories.TelefonoEmpresaRepository;
+import com.codemakers.commons.entities.CorreoGeneralEntity;
+import com.codemakers.commons.maps.CorreoGeneralMapper;
+import com.codemakers.commons.repositories.CorreoGeneralRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -22,57 +22,44 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
+public class CorreoGeneralServiceImpl implements ICorreoGeneralService{
 	
-	private final TelefonoEmpresaRepository telefonoEmpresaRepository;
-	private final TelefonoEmpresaMapper telefonoEmpresaMapper;
+	private final CorreoGeneralRepository correoGeneralRepository;
+	private final CorreoGeneralMapper correoGeneralMapper;
 	
 	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(TelefonoEmpresaDTO telefonoEmpresaDTO) {
-	    log.info("Guardar/Actualizar Telefono de Empresa");
+	public ResponseEntity<ResponseDTO> save(CorreoGeneralDTO correoGeneralDTO) {
+	    log.info("Guardar/Actualizar Correo General");
 	    try {
-	        boolean isUpdate = telefonoEmpresaDTO.getId() != null && telefonoEmpresaRepository.existsById(telefonoEmpresaDTO.getId());
-	        TelefonoEmpresaEntity entity;
+	        boolean isUpdate = correoGeneralDTO.getId() != null && correoGeneralRepository.existsById(correoGeneralDTO.getId());
 
+	        Optional<CorreoGeneralEntity> existingCorreo = correoGeneralRepository.findByCorreoIgnoreCase(correoGeneralDTO.getCorreo());
+
+	        if (existingCorreo.isPresent() && (!isUpdate || !existingCorreo.get().getId().equals(correoGeneralDTO.getId()))) {
+	            ResponseDTO errorResponse = ResponseDTO.builder()
+	                    .success(false)
+	                    .message("El correo '" + correoGeneralDTO.getCorreo() + "' ya se encuentra registrado.")
+	                    .code(HttpStatus.BAD_REQUEST.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	        }
+
+	        CorreoGeneralEntity entity;
 	        if (isUpdate) {
-	            entity = telefonoEmpresaRepository.findById(telefonoEmpresaDTO.getId())
-	                    .orElseThrow(() -> new RuntimeException("TelefonoEmpresa not found with ID: " + telefonoEmpresaDTO.getId()));
-
-	            if (!entity.getNumero().equals(telefonoEmpresaDTO.getNumero()) &&
-	                telefonoEmpresaRepository.existsByNumero(telefonoEmpresaDTO.getNumero())) {
-	                
-	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoEmpresaDTO.getNumero());
-	                ResponseDTO errorResponse = ResponseDTO.builder()
-	                        .success(false)
-	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
-	                        .code(HttpStatus.CONFLICT.value())
-	                        .build();
-	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-	            }
-
-	            telefonoEmpresaMapper.updateEntityFromDto(telefonoEmpresaDTO, entity);
+	            entity = correoGeneralRepository.findById(correoGeneralDTO.getId()).orElseThrow();
+	            correoGeneralMapper.updateEntityFromDto(correoGeneralDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(telefonoEmpresaDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(correoGeneralDTO.getUsuarioModificacion());
 	        } else {
-	            if (telefonoEmpresaRepository.existsByNumero(telefonoEmpresaDTO.getNumero())) {
-	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoEmpresaDTO.getNumero());
-	                ResponseDTO errorResponse = ResponseDTO.builder()
-	                        .success(false)
-	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
-	                        .code(HttpStatus.CONFLICT.value())
-	                        .build();
-	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
-	            }
-
-	            entity = telefonoEmpresaMapper.dtoToEntity(telefonoEmpresaDTO);
+	            entity = correoGeneralMapper.dtoToEntity(correoGeneralDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(telefonoEmpresaDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(correoGeneralDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TelefonoEmpresaEntity saved = telefonoEmpresaRepository.save(entity);
-	        TelefonoEmpresaDTO savedDTO = telefonoEmpresaMapper.entityToDto(saved);
+	        CorreoGeneralEntity saved = correoGeneralRepository.save(entity);
+	        CorreoGeneralDTO savedDTO = correoGeneralMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -87,7 +74,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el Telefono de Empresa", e);
+	        log.error("Error guardando el Correo General", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -102,11 +89,11 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar Telefono de Empresa por id: {}", id);
+	    log.info("Buscar Correo General por id: {}", id);
 	    try {
-	        Optional<TelefonoEmpresaEntity> telefonoEmpresa = telefonoEmpresaRepository.findById(id);
-	        if (telefonoEmpresa.isPresent()) {
-	        	TelefonoEmpresaDTO dto = telefonoEmpresaMapper.entityToDto(telefonoEmpresa.get());
+	        Optional<CorreoGeneralEntity> correoGeneral = correoGeneralRepository.findById(id);
+	        if (correoGeneral.isPresent()) {
+	        	CorreoGeneralDTO dto = correoGeneralMapper.entityToDto(correoGeneral.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -123,7 +110,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar Telefono de Empresa por id: {}", id, e);
+	        log.error("Error al buscar Correo General por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -136,10 +123,10 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos Telefono de Empresa");
+        log.info("Listar todos los Correo Generales");
         try {
-            var list = telefonoEmpresaRepository.findAll();
-            var dtoList = telefonoEmpresaMapper.listEntityToDtoList(list);
+            var list = correoGeneralRepository.findAll();
+            var dtoList = correoGeneralMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -148,7 +135,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar Telefono de Empresa", e);
+            log.error("Error al listar los Correo General", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -162,9 +149,9 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
     @Override
     @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar Telefono de Empresa por id: {}", id);
+        log.info("Inicio método para eliminar Correo General por id: {}", id);
         try {
-            if (!telefonoEmpresaRepository.existsById(id)) {
+            if (!correoGeneralRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -172,7 +159,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            telefonoEmpresaRepository.deleteById(id);
+            correoGeneralRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -180,7 +167,7 @@ public class TelefonoEmpresaServiceImpl implements ITelefonoEmpresaService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar Telefono de Empresa con id: {}", id, e);
+            log.error("Error al eliminar el Correo general con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)
