@@ -3,11 +3,11 @@ package com.codemakers.api.service;
 import org.springframework.http.ResponseEntity;
 
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TelefonoPersonaDTO;
+import com.codemakers.commons.dtos.TelefonoGeneralDTO;
 
-public interface ITelefonoPersonaService {
+public interface ITelefonoGeneralService {
 	
-	ResponseEntity<ResponseDTO> save(TelefonoPersonaDTO telefonoPersonaDTO);
+	ResponseEntity<ResponseDTO> save(TelefonoGeneralDTO telefonoGeneralDTO);
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
     

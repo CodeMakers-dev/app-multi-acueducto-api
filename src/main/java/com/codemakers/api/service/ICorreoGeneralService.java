@@ -2,12 +2,12 @@ package com.codemakers.api.service;
 
 import org.springframework.http.ResponseEntity;
 
-import com.codemakers.commons.dtos.CorreoEmpresaDTO;
+import com.codemakers.commons.dtos.CorreoGeneralDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 
-public interface ICorreoEmpresaService {
-    
-	ResponseEntity<ResponseDTO> save(CorreoEmpresaDTO correoEmpresaDTO);
+public interface ICorreoGeneralService {
+
+	ResponseEntity<ResponseDTO> save(CorreoGeneralDTO correoGeneralDTO);
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
     
