@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.CorreoEmpresaServiceImpl;
-import com.codemakers.commons.dtos.CorreoEmpresaDTO;
+import com.codemakers.api.service.impl.TelefonoGeneralServiceImpl;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.TelefonoGeneralDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,16 +24,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/v1/CorreoEmpresa")
-@Tag(name = "CorreoEmpresa - Controller", description = "Controller encargado de gestionar las operaciones de los Correo Empresa")
+@RequestMapping("/api/v1/TelefonoGeneral")
+@Tag(name = "TelefonoGeneral - Controller", description = "Controller encargado de gestionar las operaciones de los Telefono  generales")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class CorreoEmpresaController {
-    
-	private final CorreoEmpresaServiceImpl correoEmpresaServiceImpl;
+public class TelefonoGeneralController {
+   
+	private final TelefonoGeneralServiceImpl telefonoGeneralServiceImpl;
 	
-	@Operation(summary = "Guardar o actualizar Correo Empresa")
+	@Operation(summary = "Guardar o actualizar Telefono general")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -47,11 +47,11 @@ public class CorreoEmpresaController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody CorreoEmpresaDTO correoEmpresaDTO) {
-        return correoEmpresaServiceImpl.save(correoEmpresaDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody TelefonoGeneralDTO telefonoGeneralDTO) {
+        return telefonoGeneralServiceImpl.save(telefonoGeneralDTO);
     }
 
-    @Operation(summary = "Buscar Correo Empresa por id")
+    @Operation(summary = "Buscar Telefono general por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -64,10 +64,10 @@ public class CorreoEmpresaController {
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return correoEmpresaServiceImpl.findById(id);
+        return telefonoGeneralServiceImpl.findById(id);
     }
 
-    @Operation(summary = "Listar todos los Correo Empresa")
+    @Operation(summary = "Listar todos los Telefono general")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -80,10 +80,10 @@ public class CorreoEmpresaController {
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return correoEmpresaServiceImpl.findAll();
+        return telefonoGeneralServiceImpl.findAll();
     }
 
-    @Operation(summary = "Eliminar Correo Empresa por id")
+    @Operation(summary = "Eliminar Telefono general por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -94,6 +94,6 @@ public class CorreoEmpresaController {
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return correoEmpresaServiceImpl.deleteById(id);
+        return telefonoGeneralServiceImpl.deleteById(id);
     }
 }

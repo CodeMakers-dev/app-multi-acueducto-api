@@ -20,12 +20,12 @@ import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.RolDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
-import com.codemakers.commons.entities.CorreoPersonaEntity;
+import com.codemakers.commons.entities.CorreoGeneralEntity;
 import com.codemakers.commons.entities.PersonaEntity;
 import com.codemakers.commons.entities.RolEntity;
 import com.codemakers.commons.entities.UsuarioEntity;
 import com.codemakers.commons.maps.UsuarioMapper;
-import com.codemakers.commons.repositories.CorreoPersonaRepository;
+import com.codemakers.commons.repositories.CorreoGeneralRepository;
 import com.codemakers.commons.repositories.PersonaRepository;
 import com.codemakers.commons.repositories.RolRepository;
 import com.codemakers.commons.repositories.UsuarioRepository;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 public class UsuarioServiceImpl implements IUsuarioService {
 
 	private final UsuarioRepository usuarioRepository;
-	private final CorreoPersonaRepository correoPersonaRepository;
+	private final CorreoGeneralRepository correoGeneralRepository;
 	private final RolRepository rolRepository;
 	private final PersonaRepository personaRepository;
 	private final UsuarioMapper usuarioMapper;
@@ -168,12 +168,12 @@ public class UsuarioServiceImpl implements IUsuarioService {
 		log.info("Recuperación de contraseña solicitada para: {}", correo);
 
 		try {
-			Optional<CorreoPersonaEntity> correoPersonaOpt = correoPersonaRepository.findByCorreo(correo);
+			Optional<CorreoGeneralEntity> correoGeneralOpt = correoGeneralRepository.findByCorreo(correo);
 
-			if (correoPersonaOpt.isEmpty() || correoPersonaOpt.get().getPersona() == null) {
+			if (correoGeneralOpt.isEmpty() || correoGeneralOpt.get().getPersona() == null) {
 				return buildErrorResponse(Constantes.EMAIL_NOT_FOUND, HttpStatus.NOT_FOUND);
 			}
-			Integer idPersona = correoPersonaOpt.get().getPersona().getId();
+			Integer idPersona = correoGeneralOpt.get().getPersona().getId();
 			Optional<UsuarioEntity> usuarioOpt = usuarioRepository.findByPersonaId(idPersona);
 
 			if (usuarioOpt.isEmpty()) {
@@ -431,7 +431,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 			String username = generarNombreUsuario(personaDTO);
 			String password = generarPasswordAleatoria();
 
-			Optional<CorreoPersonaEntity> correoOpt = correoPersonaRepository
+			Optional<CorreoGeneralEntity> correoOpt = correoGeneralRepository
 					.findByPersonaIdAndActivoTrue(personaDTO.getId());
 			if (correoOpt.isEmpty() || correoOpt.get().getCorreo() == null || correoOpt.get().getCorreo().isBlank()) {
 				return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);

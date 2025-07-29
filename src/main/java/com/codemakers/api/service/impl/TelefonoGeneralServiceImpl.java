@@ -8,12 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.service.ITelefonoPersonaService;
+import com.codemakers.api.service.ITelefonoGeneralService;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TelefonoPersonaDTO;
-import com.codemakers.commons.entities.TelefonoPersonaEntity;
-import com.codemakers.commons.maps.TelefonoPersonaMapper;
-import com.codemakers.commons.repositories.TelefonoPersonaRepository;
+import com.codemakers.commons.dtos.TelefonoGeneralDTO;
+import com.codemakers.commons.entities.TelefonoGeneralEntity;
+import com.codemakers.commons.maps.TelefonoGeneralMapper;
+import com.codemakers.commons.repositories.TelefonoGeneralRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -22,27 +22,27 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
+public class TelefonoGeneralServiceImpl implements ITelefonoGeneralService{
 	
-	private final TelefonoPersonaRepository telefonoPersonaRepository;
-	private final TelefonoPersonaMapper telefonoPersonaMapper;
+	private final TelefonoGeneralRepository telefonoGeneralRepository;
+	private final TelefonoGeneralMapper telefonoGeneralMapper;
 	
 	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(TelefonoPersonaDTO telefonoPersonaDTO) {
-	    log.info("Guardar/Actualizar Telefono de Persona");
+	public ResponseEntity<ResponseDTO> save(TelefonoGeneralDTO telefonoGeneralDTO) {
+	    log.info("Guardar/Actualizar Telefono general");
 	    try {
-	        boolean isUpdate = telefonoPersonaDTO.getId() != null && telefonoPersonaRepository.existsById(telefonoPersonaDTO.getId());
-	        TelefonoPersonaEntity entity;
+	        boolean isUpdate = telefonoGeneralDTO.getId() != null && telefonoGeneralRepository.existsById(telefonoGeneralDTO.getId());
+	        TelefonoGeneralEntity entity;
 
 	        if (isUpdate) {
-	            entity = telefonoPersonaRepository.findById(telefonoPersonaDTO.getId())
-	                    .orElseThrow(() -> new RuntimeException("TelefonoPersona not found with ID: " + telefonoPersonaDTO.getId()));
+	            entity = telefonoGeneralRepository.findById(telefonoGeneralDTO.getId())
+	                    .orElseThrow(() -> new RuntimeException("TelefonoGeneral not found with ID: " + telefonoGeneralDTO.getId()));
 
-	            if (!entity.getNumero().equals(telefonoPersonaDTO.getNumero()) &&
-	                telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
+	            if (!entity.getNumero().equals(telefonoGeneralDTO.getNumero()) &&
+	                telefonoGeneralRepository.existsByNumero(telefonoGeneralDTO.getNumero())) {
 	                
-	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
+	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoGeneralDTO.getNumero());
 	                ResponseDTO errorResponse = ResponseDTO.builder()
 	                        .success(false)
 	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
@@ -51,12 +51,12 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	            }
 
-	            telefonoPersonaMapper.updateEntityFromDto(telefonoPersonaDTO, entity);
+	            telefonoGeneralMapper.updateEntityFromDto(telefonoGeneralDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(telefonoPersonaDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(telefonoGeneralDTO.getUsuarioModificacion());
 	        } else {
-	            if (telefonoPersonaRepository.existsByNumero(telefonoPersonaDTO.getNumero())) {
-	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoPersonaDTO.getNumero());
+	            if (telefonoGeneralRepository.existsByNumero(telefonoGeneralDTO.getNumero())) {
+	                log.warn("El número de teléfono {} ya existe en el sistema.", telefonoGeneralDTO.getNumero());
 	                ResponseDTO errorResponse = ResponseDTO.builder()
 	                        .success(false)
 	                        .message(Constantes.DUPLICATE_PHONE_NUMBER_ERROR)
@@ -65,14 +65,14 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	                return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
 	            }
 
-	            entity = telefonoPersonaMapper.dtoToEntity(telefonoPersonaDTO);
+	            entity = telefonoGeneralMapper.dtoToEntity(telefonoGeneralDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(telefonoPersonaDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(telefonoGeneralDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TelefonoPersonaEntity saved = telefonoPersonaRepository.save(entity);
-	        TelefonoPersonaDTO savedDTO = telefonoPersonaMapper.entityToDto(saved);
+	        TelefonoGeneralEntity saved = telefonoGeneralRepository.save(entity);
+	        TelefonoGeneralDTO savedDTO = telefonoGeneralMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -87,7 +87,7 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el Telefono de Persona", e);
+	        log.error("Error guardando el Telefono general", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -102,11 +102,11 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar Telefono de Persona por id: {}", id);
+	    log.info("Buscar Telefono general por id: {}", id);
 	    try {
-	        Optional<TelefonoPersonaEntity> telefonoPersona = telefonoPersonaRepository.findById(id);
-	        if (telefonoPersona.isPresent()) {
-	        	TelefonoPersonaDTO dto = telefonoPersonaMapper.entityToDto(telefonoPersona.get());
+	        Optional<TelefonoGeneralEntity> telefonoGeneral = telefonoGeneralRepository.findById(id);
+	        if (telefonoGeneral.isPresent()) {
+	        	TelefonoGeneralDTO dto = telefonoGeneralMapper.entityToDto(telefonoGeneral.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -123,7 +123,7 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar Telefono de Persona por id: {}", id, e);
+	        log.error("Error al buscar Telefono general por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -136,10 +136,10 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
     @Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos Telefono de Persona");
+        log.info("Listar todos Telefono generales");
         try {
-            var list = telefonoPersonaRepository.findAll();
-            var dtoList = telefonoPersonaMapper.listEntityToDtoList(list);
+            var list = telefonoGeneralRepository.findAll();
+            var dtoList = telefonoGeneralMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -148,7 +148,7 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar Telefono de Persona", e);
+            log.error("Error al listar Telefono general", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -162,9 +162,9 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
     @Override
     @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar Telefono de Persona por id: {}", id);
+        log.info("Inicio método para eliminar Telefono general por id: {}", id);
         try {
-            if (!telefonoPersonaRepository.existsById(id)) {
+            if (!telefonoGeneralRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -172,7 +172,7 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            telefonoPersonaRepository.deleteById(id);
+            telefonoGeneralRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -180,7 +180,7 @@ public class TelefonoPersonaServiceImpl implements ITelefonoPersonaService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar Telefono de Persona con id: {}", id, e);
+            log.error("Error al eliminar Telefono general con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)
