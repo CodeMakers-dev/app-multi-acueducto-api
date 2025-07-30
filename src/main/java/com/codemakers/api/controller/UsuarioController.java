@@ -51,6 +51,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class UsuarioController {
 
+
+	
 	private final UsuarioServiceImpl usuarioServiceImpl;
 	private final AutenticacionServiceImpl autenticacionServiceImpl;
 	
