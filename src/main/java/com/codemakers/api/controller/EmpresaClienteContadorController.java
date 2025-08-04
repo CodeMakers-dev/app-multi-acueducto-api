@@ -65,6 +65,43 @@ public class EmpresaClienteContadorController {
                                         .body(Map.of("error", "Error interno del servidor"));
                 }
         }
+    
+    @Operation(summary = "Eliminar cliente empresa contador por ID de persona")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Cliente eliminado correctamente", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        @ApiResponse(responseCode = "404", description = "La persona no fue encontrada", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        @ApiResponse(responseCode = "400", description = "Error en los datos enviados", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+        @ApiResponse(responseCode = "500", description = "Error inesperado en el servidor", content = {
+            @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) })
+    })
+    @DeleteMapping("/delete/{idPersona}")
+    public ResponseEntity<Map<String, Object>> deleteClient(@PathVariable Integer idPersona) {
+        try {
+            Map<String, Object> resultado = empresaClienteContadorServiceImpl.deleteClient(idPersona);
+
+            Object statusCode = resultado.get("statusCode");
+            if (statusCode instanceof Integer status) {
+                if (status == 200) {
+                    return ResponseEntity.ok(resultado);
+                } else if (status == 404) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(resultado);
+                } else {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(resultado);
+                }
+            }
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                    Map.of("error", "Respuesta inesperada del servicio"));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error interno del servidor"));
+        }
+    }
+
 	
 	@Operation(summary = "Guardar  Empresa Cliente Contador")
 	@ApiResponses(value = {
