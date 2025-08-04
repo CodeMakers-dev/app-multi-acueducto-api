@@ -14,6 +14,7 @@ import com.codemakers.api.config.JwtUtil;
 import com.codemakers.api.config.UserNotFoundException;
 import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.RolDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
 import com.codemakers.commons.dtos.VigenciaUsuarioDTO;
 import com.codemakers.commons.entities.UsuarioEntity;
@@ -65,6 +66,9 @@ public class AutenticacionServiceImpl {
             PersonaDTO personaDTO = new PersonaDTO();
             personaDTO.setId(usuario.getPersona().getId());
             personaDTO.setNombre(usuario.getPersona().getNombre());
+            RolDTO rolDTO = new RolDTO();
+            rolDTO.setId(usuario.getRol().getId());
+            rolDTO.setNombre(usuario.getRol().getNombre());
             vigenciaUsuarioRepository.save(vigenciaEntity);
             VigenciaUsuarioDTO vigenciaDTO = VigenciaUsuarioDTO.builder()
                     .id(vigenciaEntity.getId())
@@ -75,6 +79,7 @@ public class AutenticacionServiceImpl {
                             .nombre(usuario.getNombre())
                             .activo(usuario.getActivo())
                             .imagen(usuario.getImagen())
+                            .rol(rolDTO)
                             .persona(personaDTO)
                             .build())
                     .usuarioCreacion(vigenciaEntity.getUsuarioCreacion())
