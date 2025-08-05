@@ -65,6 +65,29 @@ public class EmpresaClienteContadorController {
                                         .body(Map.of("error", "Error interno del servidor"));
                 }
         }
+    @Operation(summary = "Actualizar cliente empresa contador")
+    @ApiResponses(value = {
+                    @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @PostMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateClient(@RequestBody Map<String, Object> clienteData) {
+        Map<String, Object> resultado = empresaClienteContadorServiceImpl.updateClient(clienteData);
+
+        if (resultado.containsKey("error")) {
+            return ResponseEntity.badRequest().body(resultado);
+        } else {
+            return ResponseEntity.ok(resultado);
+        }
+    }
     
     @Operation(summary = "Eliminar cliente empresa contador por ID de persona")
     @ApiResponses(value = {

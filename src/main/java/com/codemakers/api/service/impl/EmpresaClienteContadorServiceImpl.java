@@ -116,6 +116,41 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
 	}
     
     @Transactional
+    public Map<String, Object> updateClient(Map<String, Object> jsonParams) {
+        try {
+            
+            String jsonString = objectMapper.writeValueAsString(jsonParams);
+
+           
+            String sql = "SELECT * FROM public.actualizar_cliente_basico(CAST(:jsonData AS jsonb))";
+
+          
+            MapSqlParameterSource parameters = new MapSqlParameterSource();
+            parameters.addValue("jsonData", jsonString);
+
+          
+            Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+
+         
+            Object wrappedValue = rawResult.get("actualizar_cliente_basico");
+            if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+                String jsonValue = pgObject.getValue();
+                return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+            }
+
+            return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+
+        } catch (JsonProcessingException e) {
+            log.error("Error de procesamiento JSON", e);
+            return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+        } catch (Exception e) {
+            log.error("Error inesperado en updateClient", e);
+            return Map.of("error", "Error inesperado: " + e.getMessage());
+        }
+    }
+
+    
+    @Transactional
     public Map<String, Object> deleteClient(Integer idPersona) {
     	try {
     		String sql = "SELECT * FROM public.eliminar_cliente_completo(:idPersona)";
