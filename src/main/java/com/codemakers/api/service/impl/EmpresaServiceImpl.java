@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpresaService;
 import com.codemakers.commons.dtos.EmpresaDTO;
+import com.codemakers.commons.dtos.EmpresaResponseDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.entities.EmpresaEntity;
 import com.codemakers.commons.maps.EmpresaMapper;
@@ -72,6 +73,29 @@ public class EmpresaServiceImpl implements IEmpresaService{
         }
     }
 	
+	@Transactional
+	public Map<String, Object> updateEmpresaDireccion(Map<String, Object> jsonParams) {
+	    try {
+	        String jsonString = objectMapper.writeValueAsString(jsonParams);
+	        String sql = "SELECT * FROM public.actualizar_empresa_direccion(CAST(:jsonData AS jsonb))";
+	        MapSqlParameterSource parameters = new MapSqlParameterSource();
+	        parameters.addValue("jsonData", jsonString);
+	        Map<String, Object> rawResult = namedParameterJdbcTemplate.queryForMap(sql, parameters);
+	        Object wrappedValue = rawResult.get("actualizar_empresa_direccion");
+	        if (wrappedValue instanceof PGobject pgObject && "jsonb".equals(pgObject.getType())) {
+	            String jsonValue = pgObject.getValue();
+	            return objectMapper.readValue(jsonValue, new TypeReference<Map<String, Object>>() {});
+	        }
+	        return Map.of("error", "El resultado no pudo ser procesado correctamente.");
+	    } catch (JsonProcessingException e) {
+	        log.error("Error de procesamiento JSON", e);
+	        return Map.of("error", "Error de procesamiento JSON: " + e.getMessage());
+	    } catch (Exception e) {
+	        log.error("Error inesperado en actualizarEmpresaDireccion", e);
+	        return Map.of("error", "Error inesperado: " + e.getMessage());
+	    }
+	}
+
 	@Transactional
     public Map<String, Object> registrarEmpresa(Map<String, Object> jsonParams) {
         try {
@@ -144,39 +168,41 @@ public class EmpresaServiceImpl implements IEmpresaService{
         }
     }
 
-	@Override
-	@Transactional(readOnly = true)
-	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar Empresa por id: {}", id);
-	    try {
-	        Optional<EmpresaEntity> empresa = empresaRepository.findById(id);
-	        if (empresa.isPresent()) {
-	        	EmpresaDTO dto = empresaMapper.entityToDto(empresa.get());
-	            ResponseDTO responseDTO = ResponseDTO.builder()
-	                    .success(true)
-	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
-	                    .code(HttpStatus.OK.value())
-	                    .response(dto)
-	                    .build();
-	            return ResponseEntity.ok(responseDTO);
-	        } else {
-	            ResponseDTO responseDTO = ResponseDTO.builder()
-	                    .success(false)
-	                    .message(Constantes.CONSULTING_ERROR)
-	                    .code(HttpStatus.NOT_FOUND.value())
-	                    .build();
-	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
-	        }
-	    } catch (Exception e) {
-	        log.error("Error al buscar  Empresa por id: {}", id, e);
-	        ResponseDTO responseDTO = ResponseDTO.builder()
-	                .success(false)
-	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
-	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-	                .build();
-	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-	    }
-	}
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> findById(Integer id) {
+        log.info("Buscar Empresa por id: {}", id);
+        try {
+            Optional<EmpresaEntity> empresa = empresaRepository.findById(id);
+            if (empresa.isPresent()) {
+                EmpresaResponseDTO dto = empresaMapper.entityToResumenDto(empresa.get());
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(true)
+                        .message(Constantes.CONSULTED_SUCCESSFULLY)
+                        .code(HttpStatus.OK.value())
+                        .response(dto)
+                        .build();
+                return ResponseEntity.ok(responseDTO);
+            } else {
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(false)
+                        .message("No se encontró la empresa con el ID especificado")
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+            }
+        } catch (Exception e) {
+            log.error("Error al buscar Empresa por id: {}", id, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+
+
 	
 	@Override
 	@Transactional(readOnly = true)
@@ -216,9 +242,10 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
+	
 
 
-    @Override
+   /* @Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
         log.info("Listar todos las empresas");
@@ -242,7 +269,33 @@ public class EmpresaServiceImpl implements IEmpresaService{
                     .build();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
-    }
+    }*/
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ResponseDTO> findAll() {
+	    log.info("Listar todas las empresas");
+	    try {
+	        var list = empresaRepository.findAll();
+	        var dtoList = empresaMapper.listEntityToResumenDtoList(list); 
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                .code(HttpStatus.OK.value())
+	                .response(dtoList)
+	                .build();
+	        return ResponseEntity.ok(responseDTO);
+	    } catch (Exception e) {
+	        log.error("Error al listar las empresas", e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.CONSULTING_ERROR)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .response(null)
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
+
 
     @Override
     @Transactional
