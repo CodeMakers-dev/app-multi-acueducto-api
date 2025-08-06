@@ -192,7 +192,7 @@ public class EmpresaController {
             @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class))
         }),
     })
-    @PostMapping("/update")
+    @PostMapping("/updateEmpresa")
     public ResponseEntity<Map<String, Object>> actualizarEmpresaDireccion(
         @RequestBody Map<String, Object> jsonParams) {
 
