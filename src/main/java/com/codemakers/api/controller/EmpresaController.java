@@ -96,7 +96,7 @@ public class EmpresaController {
         }
     }
 
-    @Operation(summary = "Buscar Empresa por id")
+    @Operation(summary = "Buscar Empresa por id de usuario")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -176,6 +176,7 @@ public class EmpresaController {
         return empresaServiceImpl.update(empresaDTO);
     }
     
+
     @Operation(summary = "Actualizar empresa y su dirección")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Empresa actualizada correctamente", content = {
@@ -213,6 +214,31 @@ public class EmpresaController {
            
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", "Error interno del servidor"));
+        }
+    }
+
+
+    @Operation(summary = "Actualizar cliente empresa contador")
+    @ApiResponses(value = {
+                    @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "200", description = "Se ha actualizado satisfactoriamente", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+                    @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @PostMapping("/update")
+    public ResponseEntity<Map<String, Object>> updateEnterpiseStatus(@RequestBody Map<String, Object> enterpriseData) {
+        Map<String, Object> resultado = empresaServiceImpl.updateEnterpise(enterpriseData);
+
+        if (resultado.containsKey("error")) {
+            return ResponseEntity.badRequest().body(resultado);
+        } else {
+            return ResponseEntity.ok(resultado);
         }
     }
 
