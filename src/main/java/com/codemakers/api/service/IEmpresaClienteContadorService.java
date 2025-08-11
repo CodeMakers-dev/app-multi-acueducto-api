@@ -13,6 +13,8 @@ public interface IEmpresaClienteContadorService {
 	
 	ResponseEntity<ResponseDTO> findByEmpresaId(Integer idEmpresa);
 	
+	ResponseEntity<ResponseDTO> findByEmpresaIdResponseId(Integer idEmpresa);
+	
     ResponseEntity<ResponseDTO> findById(Integer id);
     
     ResponseEntity<ResponseDTO> findAll();

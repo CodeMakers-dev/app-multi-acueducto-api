@@ -195,6 +195,22 @@ public class EmpresaClienteContadorController {
 	public ResponseEntity<ResponseDTO> findByEmpresaId(@PathVariable Integer idEmpresa) {
 	    return empresaClienteContadorServiceImpl.findByEmpresaId(idEmpresa);
 	}
+	
+	@Operation(summary = "Buscar Empresa Cliente Contador por id de la empresa, respuesta de solo id's")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+	@GetMapping("/response/empresa/{idEmpresa}")
+	public ResponseEntity<ResponseDTO> findByEmpresaIdResponseId(@PathVariable Integer idEmpresa) {
+	    return empresaClienteContadorServiceImpl.findByEmpresaIdResponseId(idEmpresa);
+	}
 
     @Operation(summary = "Buscar Empresa Cliente Contador por id")
     @ApiResponses(value = {

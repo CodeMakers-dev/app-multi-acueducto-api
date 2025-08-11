@@ -2,6 +2,7 @@ package com.codemakers.api.service.impl;
 
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -179,6 +180,43 @@ public class FacturaServiceImpl implements IFacturaService{
 	}
 	
 
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ResponseDTO> findByEnterpriseId(Integer idEmpresa) {
+	    log.info("Buscar facturas por id de empresa: {}", idEmpresa);
+	    try {
+	        List<FacturaEntity> facturas = facturaRepository.findByEmpresaClienteContador_Empresa_Id(idEmpresa);
+
+	        if (facturas.isEmpty()) {
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(false)
+	                    .message("No se encontraron facturas para la empresa con id " + idEmpresa)
+	                    .code(HttpStatus.NOT_FOUND.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+	        }
+
+	        List<FacturaDTO> dtoList = facturaMapper.listEntityToDtoList(facturas);
+
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                .code(HttpStatus.OK.value())
+	                .response(dtoList)
+	                .build();
+
+	        return ResponseEntity.ok(responseDTO);
+	    } catch (Exception e) {
+	        log.error("Error al buscar facturas por id de empresa: {}", idEmpresa, e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+	    }
+	}
+
 
 
 	@Override
@@ -211,35 +249,6 @@ public class FacturaServiceImpl implements IFacturaService{
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
-
- /* @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos las facturas");
-        try {
-            var list = facturaRepository.findAll();
-            
-            var dtoList = facturaMapper.listEntityToDtoList(list);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.CONSULTED_SUCCESSFULLY)
-                    .code(HttpStatus.OK.value())
-                    .response(dtoList)
-                    .build();
-            return ResponseEntity.ok(responseDTO);
-        } catch (Exception e) {
-            log.error("Error al listar las facturas", e);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.CONSULTING_ERROR)
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .response(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-        }
-    }*/
-
-  
 
     @Override
     @Transactional

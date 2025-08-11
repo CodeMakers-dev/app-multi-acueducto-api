@@ -3,6 +3,7 @@ package com.codemakers.api.service.impl;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -201,6 +202,39 @@ public class EmpresaServiceImpl implements IEmpresaService{
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
         }
     }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> getAllEnterpriseResponseId() {
+        log.info("Consultar todas las empresas y se muestra en el response solo los id de los registros:");
+        try {
+            List<EmpresaEntity> list = empresaRepository.findAll();
+
+            List<Map<String, Object>> idList = list.stream()
+                .map(e -> Map.<String, Object>of("id", e.getId()))
+                .toList();
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                .success(true)
+                .message(Constantes.CONSULTED_SUCCESSFULLY)
+                .code(HttpStatus.OK.value())
+                .response(idList)
+                .build();
+
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+            log.error("Error al consultar por id de empresa", e);
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                .success(false)
+                .message(Constantes.CONSULTING_ERROR)
+                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .build();
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+
 
     @Override
     @Transactional(readOnly = true)

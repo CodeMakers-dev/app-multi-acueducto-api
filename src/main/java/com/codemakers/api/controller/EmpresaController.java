@@ -143,6 +143,22 @@ public class EmpresaController {
     public ResponseEntity<ResponseDTO> getAll() {
         return empresaServiceImpl.findAll();
     }
+    
+    @Operation(summary = "Listar todos los empresa con response id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "400", description = "La petición no puede ser entendida por el servidor debido a errores de sintaxis", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "404", description = "El recurso solicitado no puede ser encontrado", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+            @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
+                    @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
+    })
+    @GetMapping("/all/responseId")
+    public ResponseEntity<ResponseDTO> getAllResponseId() {
+        return empresaServiceImpl.getAllEnterpriseResponseId();
+    }
 
     @Operation(summary = "Eliminar empresa por id")
     @ApiResponses(value = {

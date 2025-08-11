@@ -8,12 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.service.ITipoContadorService;
+import com.codemakers.api.service.ICategoriaProductoService;
+import com.codemakers.commons.dtos.CategoriaProductoDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TipoContadorDTO;
-import com.codemakers.commons.entities.TipoContadorEntity;
-import com.codemakers.commons.maps.TipoContadorMapper;
-import com.codemakers.commons.repositories.TipoContadorRepository;
+import com.codemakers.commons.entities.CategoriaProductoEntity;
+import com.codemakers.commons.maps.CategoriaProductoMapper;
+import com.codemakers.commons.repositories.CategoriaProductoRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -29,33 +29,33 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TipoContadorServiceImpl implements ITipoContadorService {
+public class CategoriaProductoServiceImpl implements ICategoriaProductoService {
 
-	private final TipoContadorRepository tipoContadorRepository;
-	private final TipoContadorMapper tipoContadorMapper;
+	private final CategoriaProductoRepository categoriaRepository;
+	private final CategoriaProductoMapper categoriaMapper;
 	
 	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(TipoContadorDTO tipoContadorDTO) {
-	    log.info("Guardar/Actualizar Tipo de Documento");
+	public ResponseEntity<ResponseDTO> save(CategoriaProductoDTO categoriaDTO) {
+	    log.info("Guardar/Actualizar Tipo Cuenta Contable");
 	    try {
-	        boolean isUpdate = tipoContadorDTO.getId() != null && tipoContadorRepository.existsById(tipoContadorDTO.getId());
-	        TipoContadorEntity entity;
+	        boolean isUpdate = categoriaDTO.getId() != null && categoriaRepository.existsById(categoriaDTO.getId());
+	        CategoriaProductoEntity entity;
 
 	        if (isUpdate) {
-	            entity = tipoContadorRepository.findById(tipoContadorDTO.getId()).orElseThrow();
-	            tipoContadorMapper.updateEntityFromDto(tipoContadorDTO, entity);
+	            entity = categoriaRepository.findById(categoriaDTO.getId()).orElseThrow();
+	            categoriaMapper.updateEntityFromDto(categoriaDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(tipoContadorDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(categoriaDTO.getUsuarioModificacion());
 	        } else {
-	            entity = tipoContadorMapper.dtoToEntity(tipoContadorDTO);
+	            entity = categoriaMapper.dtoToEntity(categoriaDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(tipoContadorDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(categoriaDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TipoContadorEntity saved = tipoContadorRepository.save(entity);
-	        TipoContadorDTO savedDTO = tipoContadorMapper.entityToDto(saved);
+	        CategoriaProductoEntity saved = categoriaRepository.save(entity);
+	        CategoriaProductoDTO savedDTO = categoriaMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -70,7 +70,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el tipo de contador", e);
+	        log.error("Error guardando la categoria producto", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -80,15 +80,15 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	    }
 	}
-
+	
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar tipo de contador por id: {}", id);
+	    log.info("Buscar categoria producto por id: {}", id);
 	    try {
-	        Optional<TipoContadorEntity> tipoContador = tipoContadorRepository.findById(id);
-	        if (tipoContador.isPresent()) {
-	        	TipoContadorDTO dto = tipoContadorMapper.entityToDto(tipoContador.get());
+	        Optional<CategoriaProductoEntity> categoria = categoriaRepository.findById(id);
+	        if (categoria.isPresent()) {
+	        	CategoriaProductoDTO dto = categoriaMapper.entityToDto(categoria.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -105,7 +105,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar tipo contador por id: {}", id, e);
+	        log.error("Error al buscar la categoria producto por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -114,14 +114,14 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
-
-    @Override
+	
+	@Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los tipos de contadores");
+        log.info("Listar todas las categortias");
         try {
-            var list = tipoContadorRepository.findAll();
-            var dtoList = tipoContadorMapper.listEntityToDtoList(list);
+            var list = categoriaRepository.findAll();
+            var dtoList = categoriaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -130,7 +130,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar los tipos de contadores", e);
+            log.error("Error al listar las categorias", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -140,13 +140,13 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
     }
-
-    @Override
+	
+	@Override
     @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar tipo de contador por id: {}", id);
+        log.info("Inicio método para eliminar categoria por id: {}", id);
         try {
-            if (!tipoContadorRepository.existsById(id)) {
+            if (!categoriaRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -154,7 +154,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            tipoContadorRepository.deleteById(id);
+            categoriaRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -162,7 +162,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar el tipo de contador con id: {}", id, e);
+            log.error("Error al eliminar la categoria con el id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)

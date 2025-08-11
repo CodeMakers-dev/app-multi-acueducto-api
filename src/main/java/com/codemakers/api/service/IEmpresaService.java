@@ -15,6 +15,8 @@ public interface IEmpresaService {
     
     ResponseEntity<ResponseDTO> findByUsuarioId(Integer idUsuario);
     
+    ResponseEntity<ResponseDTO> getAllEnterpriseResponseId();
+    
     ResponseEntity<ResponseDTO> findAll();
     
     ResponseEntity<ResponseDTO> deleteById(Integer id);
