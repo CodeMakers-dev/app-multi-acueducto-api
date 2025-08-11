@@ -13,6 +13,8 @@ public interface IFacturaService {
 	
     ResponseEntity<ResponseDTO> findById(Integer id);
     
+    ResponseEntity<ResponseDTO> findByEnterpriseId(Integer idEmpresa);
+    
     ResponseEntity<ResponseDTO> findAll();
     
     ResponseEntity<ResponseDTO> deleteById(Integer id);

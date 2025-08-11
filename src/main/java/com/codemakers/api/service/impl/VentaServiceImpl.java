@@ -8,12 +8,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.service.ITipoContadorService;
+import com.codemakers.api.service.IVentaService;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.TipoContadorDTO;
-import com.codemakers.commons.entities.TipoContadorEntity;
-import com.codemakers.commons.maps.TipoContadorMapper;
-import com.codemakers.commons.repositories.TipoContadorRepository;
+import com.codemakers.commons.dtos.VentaDTO;
+import com.codemakers.commons.entities.VentaEntity;
+import com.codemakers.commons.maps.VentaMapper;
+import com.codemakers.commons.repositories.VentaRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -29,33 +29,33 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TipoContadorServiceImpl implements ITipoContadorService {
+public class VentaServiceImpl implements IVentaService{
 
-	private final TipoContadorRepository tipoContadorRepository;
-	private final TipoContadorMapper tipoContadorMapper;
+	private final VentaRepository ventaRepository;
+	private final VentaMapper ventaMapper;
 	
 	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(TipoContadorDTO tipoContadorDTO) {
-	    log.info("Guardar/Actualizar Tipo de Documento");
+	public ResponseEntity<ResponseDTO> save(VentaDTO ventaDTO) {
+	    log.info("Guardar/Actualizar Venta ");
 	    try {
-	        boolean isUpdate = tipoContadorDTO.getId() != null && tipoContadorRepository.existsById(tipoContadorDTO.getId());
-	        TipoContadorEntity entity;
+	        boolean isUpdate = ventaDTO.getId() != null && ventaRepository.existsById(ventaDTO.getId());
+	        VentaEntity entity;
 
 	        if (isUpdate) {
-	            entity = tipoContadorRepository.findById(tipoContadorDTO.getId()).orElseThrow();
-	            tipoContadorMapper.updateEntityFromDto(tipoContadorDTO, entity);
+	            entity = ventaRepository.findById(ventaDTO.getId()).orElseThrow();
+	            ventaMapper.updateEntityFromDto(ventaDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(tipoContadorDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(ventaDTO.getUsuarioModificacion());
 	        } else {
-	            entity = tipoContadorMapper.dtoToEntity(tipoContadorDTO);
+	            entity = ventaMapper.dtoToEntity(ventaDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(tipoContadorDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(ventaDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        TipoContadorEntity saved = tipoContadorRepository.save(entity);
-	        TipoContadorDTO savedDTO = tipoContadorMapper.entityToDto(saved);
+	        VentaEntity saved = ventaRepository.save(entity);
+	        VentaDTO savedDTO = ventaMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -70,7 +70,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el tipo de contador", e);
+	        log.error("Error guardando la venta", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -80,15 +80,15 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
 	    }
 	}
-
+	
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar tipo de contador por id: {}", id);
+	    log.info("Buscar venta por id: {}", id);
 	    try {
-	        Optional<TipoContadorEntity> tipoContador = tipoContadorRepository.findById(id);
-	        if (tipoContador.isPresent()) {
-	        	TipoContadorDTO dto = tipoContadorMapper.entityToDto(tipoContador.get());
+	        Optional<VentaEntity> producto = ventaRepository.findById(id);
+	        if (producto.isPresent()) {
+	        	VentaDTO dto = ventaMapper.entityToDto(producto.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -105,7 +105,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar tipo contador por id: {}", id, e);
+	        log.error("Error al buscar venta por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -114,14 +114,14 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
 	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
-
-    @Override
+	
+	@Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los tipos de contadores");
+        log.info("Listar todas las ventas");
         try {
-            var list = tipoContadorRepository.findAll();
-            var dtoList = tipoContadorMapper.listEntityToDtoList(list);
+            var list = ventaRepository.findAll();
+            var dtoList = ventaMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -130,7 +130,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar los tipos de contadores", e);
+            log.error("Error al listar las ventas", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -140,13 +140,13 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
         }
     }
-
-    @Override
+	
+	@Override
     @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar tipo de contador por id: {}", id);
+        log.info("Inicio método para eliminar venta por id: {}", id);
         try {
-            if (!tipoContadorRepository.existsById(id)) {
+            if (!ventaRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -154,7 +154,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            tipoContadorRepository.deleteById(id);
+            ventaRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -162,7 +162,7 @@ public class TipoContadorServiceImpl implements ITipoContadorService {
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar el tipo de contador con id: {}", id, e);
+            log.error("Error al eliminar cuenta con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)

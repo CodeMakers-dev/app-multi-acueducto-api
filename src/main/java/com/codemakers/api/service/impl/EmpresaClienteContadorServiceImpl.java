@@ -1,6 +1,7 @@
 package com.codemakers.api.service.impl;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -257,6 +258,45 @@ public class EmpresaClienteContadorServiceImpl implements IEmpresaClienteContado
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
             log.error("Error al consultar por id de empresa: {}", idEmpresa, e);
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(false)
+                    .message(Constantes.CONSULTING_ERROR)
+                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                    .build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
+        }
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public ResponseEntity<ResponseDTO> findByEmpresaIdResponseId(Integer idEmpresa) {
+        log.info("Buscar Empresa Cliente Contador por id de empresa: {}", idEmpresa);
+        try {
+        	var list = empresaClienteContadorRepository.findByEmpresa_Id(idEmpresa);
+
+            if (list.isEmpty()) {
+                ResponseDTO responseDTO = ResponseDTO.builder()
+                        .success(false)
+                        .message("No se encontraron registros para la empresa con id: " + idEmpresa)
+                        .code(HttpStatus.NOT_FOUND.value())
+                        .build();
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+            }
+
+            List<Map<String, Object>> idList = list.stream()
+            	    .map(e -> Map.<String, Object>of("id", e.getId()))
+            	    .toList();
+
+            ResponseDTO responseDTO = ResponseDTO.builder()
+                    .success(true)
+                    .message(Constantes.CONSULTED_SUCCESSFULLY)
+                    .code(HttpStatus.OK.value())
+                    .response(idList)
+                    .build();
+
+            return ResponseEntity.ok(responseDTO);
+        } catch (Exception e) {
+        	log.error("Error al consultar por id de empresa: {}", idEmpresa, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
