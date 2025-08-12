@@ -37,7 +37,7 @@ public class PatrimonioController {
 
 	private final PatrimonioServiceImpl patrimonioServiceImpl; 
 	
-	@Operation(summary = "Buscar aptrimonio por id de Empresa")
+	@Operation(summary = "Buscar patrimonio por id de Empresa")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),

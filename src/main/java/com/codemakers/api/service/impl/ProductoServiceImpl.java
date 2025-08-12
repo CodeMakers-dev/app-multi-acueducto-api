@@ -1,6 +1,7 @@
 package com.codemakers.api.service.impl;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
@@ -78,6 +79,43 @@ public class ProductoServiceImpl implements IProductoService {
 	                .build();
 
 	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	    }
+	}
+	
+	@Override
+	@Transactional(readOnly = true)
+	public ResponseEntity<ResponseDTO> findByEnterpriseId(Integer idEmpresa) {
+	    log.info("Buscar producto por id de empresa: {}", idEmpresa);
+	    try {
+	        List<ProductoEntity> producto= productoRepository.findByEmpresa_Id(idEmpresa);
+
+	        if (producto.isEmpty()) {
+	            ResponseDTO responseDTO = ResponseDTO.builder()
+	                    .success(false)
+	                    .message("No se encontraron productos para la empresa con id " + idEmpresa)
+	                    .code(HttpStatus.NOT_FOUND.value())
+	                    .build();
+	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
+	        }
+
+	        List<ProductoDTO> dtoList = productoMapper.listEntityToDtoList(producto);
+
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(true)
+	                .message(Constantes.CONSULTED_SUCCESSFULLY)
+	                .code(HttpStatus.OK.value())
+	                .response(dtoList)
+	                .build();
+
+	        return ResponseEntity.ok(responseDTO);
+	    } catch (Exception e) {
+	        log.error("Error al buscar productos por id de empresa: {}", idEmpresa, e);
+	        ResponseDTO responseDTO = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
+	                .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
+	                .build();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
 	    }
 	}
 	
