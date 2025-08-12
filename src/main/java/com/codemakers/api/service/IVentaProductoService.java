@@ -2,8 +2,8 @@ package com.codemakers.api.service;
 
 import org.springframework.http.ResponseEntity;
 
-import com.codemakers.commons.dtos.InventarioDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.VentaProductoDTO;
 
 /**
  * @author nicope
@@ -15,11 +15,11 @@ import com.codemakers.commons.dtos.ResponseDTO;
  * 
  */
 
-public interface IInventarioService {
+public interface IVentaProductoService {
 
-	ResponseEntity<ResponseDTO> save(InventarioDTO inventarioDTO);
+	ResponseEntity<ResponseDTO> save(VentaProductoDTO ventaProductoDTO);
+	ResponseEntity<ResponseDTO> findBySaleId(Integer idVenta);
     ResponseEntity<ResponseDTO> findById(Integer id);
-    ResponseEntity<ResponseDTO> findByEnterpriseId(Integer idEmpresa);
     ResponseEntity<ResponseDTO> findAll();
     ResponseEntity<ResponseDTO> deleteById(Integer id);
 }

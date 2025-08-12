@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.codemakers.api.service.impl.InventarioServiceImpl;
-import com.codemakers.commons.dtos.InventarioDTO;
+import com.codemakers.api.service.impl.VentaProductoServiceImpl;
 import com.codemakers.commons.dtos.ResponseDTO;
+import com.codemakers.commons.dtos.VentaProductoDTO;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -28,20 +28,20 @@ import lombok.RequiredArgsConstructor;
  * @version 1.0
  * 
  *          Controlador que expone los servicios para trabajar con objeto(s) de
- *          tipo (Inventario).
+ *          tipo (VentaProducto).
  */
 
 @RestController
-@RequestMapping("/api/v1/Inventario")
-@Tag(name = "Inventario - Controller", description = "Controller encargado de gestionar las operaciones de los inventarios")
+@RequestMapping("/api/v1/VentaProducto")
+@Tag(name = "VentaProducto - Controller", description = "Controller encargado de gestionar las operaciones de las Ventas Productos")
 @CrossOrigin(origins = "*", methods = { RequestMethod.DELETE, RequestMethod.GET, RequestMethod.POST,
 		RequestMethod.PUT })
 @RequiredArgsConstructor
-public class InventarioController {
+public class VentaProductoController {
 
-private final InventarioServiceImpl inventarioServiceImpl;
+	private final VentaProductoServiceImpl ventaProductoServiceImpl;
 	
-	@Operation(summary = "Guardar o actualizar inventario")
+	@Operation(summary = "Guardar o actualizar venta producto")
 	@ApiResponses(value = {
 	        @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -55,11 +55,11 @@ private final InventarioServiceImpl inventarioServiceImpl;
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
     @PostMapping
-    public ResponseEntity<ResponseDTO> save(@RequestBody InventarioDTO inventarioDTO) {
-        return inventarioServiceImpl.save(inventarioDTO);
+    public ResponseEntity<ResponseDTO> save(@RequestBody VentaProductoDTO ventaProductoDTO) {
+        return ventaProductoServiceImpl.save(ventaProductoDTO);
     }
 	
-	@Operation(summary = "Buscar inventario por id de Empresa")
+	@Operation(summary = "Buscar venta producto por id de venta")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -70,12 +70,12 @@ private final InventarioServiceImpl inventarioServiceImpl;
             @ApiResponse(responseCode = "500", description = "Se presentó una condición inesperada que impidió completar la petición", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
     })
-    @GetMapping("/empresa/{id}")
-    public ResponseEntity<ResponseDTO> getByEnterpriseId(@PathVariable Integer id) {
-        return inventarioServiceImpl.findByEnterpriseId(id);
+    @GetMapping("/venta/{id}")
+    public ResponseEntity<ResponseDTO> getBySaleId(@PathVariable Integer id) {
+        return ventaProductoServiceImpl.findBySaleId(id);
     }
 
-    @Operation(summary = "Buscar inventario por id")
+    @Operation(summary = "Buscar venta producto por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -88,10 +88,10 @@ private final InventarioServiceImpl inventarioServiceImpl;
     })
     @GetMapping("/{id}")
     public ResponseEntity<ResponseDTO> getById(@PathVariable Integer id) {
-        return inventarioServiceImpl.findById(id);
+        return ventaProductoServiceImpl.findById(id);
     }
 
-    @Operation(summary = "Listar todos los inventarios")
+    @Operation(summary = "Listar todas las ventas productos")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Se ha guardado satisfactoriamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -104,10 +104,10 @@ private final InventarioServiceImpl inventarioServiceImpl;
     })
     @GetMapping("/all")
     public ResponseEntity<ResponseDTO> getAll() {
-        return inventarioServiceImpl.findAll();
+        return ventaProductoServiceImpl.findAll();
     }
     
-    @Operation(summary = "Eliminar inventario por id")
+    @Operation(summary = "Eliminar venta producto por id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Rol eliminado correctamente", content = {
                     @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
@@ -118,6 +118,6 @@ private final InventarioServiceImpl inventarioServiceImpl;
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<ResponseDTO> deleteById(@PathVariable Integer id) {
-        return inventarioServiceImpl.deleteById(id);
+        return ventaProductoServiceImpl.deleteById(id);
     }
 }
