@@ -9,13 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.service.IInventarioService;
-import com.codemakers.commons.dtos.InventarioDTO;
-import com.codemakers.commons.dtos.InventarioResponseDTO;
+import com.codemakers.api.service.IVentaProductoService;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.entities.InventarioEntity;
-import com.codemakers.commons.maps.InventarioMapper;
-import com.codemakers.commons.repositories.InventarioRepository;
+import com.codemakers.commons.dtos.VentaProductoDTO;
+import com.codemakers.commons.entities.VentaProductoEntity;
+import com.codemakers.commons.maps.VentaProductoMapper;
+import com.codemakers.commons.repositories.VentaProductoRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -31,33 +30,33 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class InventarioServiceImpl implements IInventarioService{
+public class VentaProductoServiceImpl implements IVentaProductoService {
 
-	private final InventarioRepository inventarioRepository;
-	private final InventarioMapper inventarioMapper;
+	private final VentaProductoRepository ventaProductoRepository;
+	private final VentaProductoMapper ventaProductoMapper;
 	
 	@Override
 	@Transactional
-	public ResponseEntity<ResponseDTO> save(InventarioDTO inventarioDTO) {
-	    log.info("Guardar/Actualizar Inventario ");
+	public ResponseEntity<ResponseDTO> save(VentaProductoDTO ventaProductoDTO) {
+	    log.info("Guardar/Actualizar Venta Producto");
 	    try {
-	        boolean isUpdate = inventarioDTO.getId() != null && inventarioRepository.existsById(inventarioDTO.getId());
-	        InventarioEntity entity;
+	        boolean isUpdate = ventaProductoDTO.getId() != null && ventaProductoRepository.existsById(ventaProductoDTO.getId());
+	        VentaProductoEntity entity;
 
 	        if (isUpdate) {
-	            entity = inventarioRepository.findById(inventarioDTO.getId()).orElseThrow();
-	            inventarioMapper.updateEntityFromDto(inventarioDTO, entity);
+	            entity = ventaProductoRepository.findById(ventaProductoDTO.getId()).orElseThrow();
+	            ventaProductoMapper.updateEntityFromDto(ventaProductoDTO, entity);
 	            entity.setFechaModificacion(new Date());
-	            entity.setUsuarioModificacion(inventarioDTO.getUsuarioModificacion());
+	            entity.setUsuarioModificacion(ventaProductoDTO.getUsuarioModificacion());
 	        } else {
-	            entity = inventarioMapper.dtoToEntity(inventarioDTO);
+	            entity = ventaProductoMapper.dtoToEntity(ventaProductoDTO);
 	            entity.setFechaCreacion(new Date());
-	            entity.setUsuarioCreacion(inventarioDTO.getUsuarioCreacion());
+	            entity.setUsuarioCreacion(ventaProductoDTO.getUsuarioCreacion());
 	            entity.setActivo(true);
 	        }
 
-	        InventarioEntity saved = inventarioRepository.save(entity);
-	        InventarioDTO savedDTO = inventarioMapper.entityToDto(saved);
+	        VentaProductoEntity saved = ventaProductoRepository.save(entity);
+	        VentaProductoDTO savedDTO = ventaProductoMapper.entityToDto(saved);
 
 	        String message = isUpdate ? Constantes.UPDATED_SUCCESSFULLY : Constantes.SAVED_SUCCESSFULLY;
 	        int statusCode = isUpdate ? HttpStatus.OK.value() : HttpStatus.CREATED.value();
@@ -72,7 +71,7 @@ public class InventarioServiceImpl implements IInventarioService{
 	        return ResponseEntity.status(statusCode).body(responseDTO);
 
 	    } catch (Exception e) {
-	        log.error("Error guardando el inventario", e);
+	        log.error("Error guardando el venta producto", e);
 	        ResponseDTO errorResponse = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.SAVE_ERROR)
@@ -85,32 +84,21 @@ public class InventarioServiceImpl implements IInventarioService{
 	
 	@Override
 	@Transactional(readOnly = true)
-	public ResponseEntity<ResponseDTO> findByEnterpriseId(Integer idEmpresa) {
-	    log.info("Buscar inventario por id de empresa: {}", idEmpresa);
+	public ResponseEntity<ResponseDTO> findBySaleId(Integer idVenta) {
+	    log.info("Buscar venta producto por id de venta: {}", idVenta);
 	    try {
-	        List<InventarioEntity> inventario = inventarioRepository.findByProducto_Empresa_Id(idEmpresa);
+	        List<VentaProductoEntity> ventaProducto= ventaProductoRepository.findByVenta_Id(idVenta);
 
-	        if (inventario.isEmpty()) {
+	        if (ventaProducto.isEmpty()) {
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(false)
-	                    .message("No se encontraron inventarios para la empresa con id " + idEmpresa)
+	                    .message("No se encontraron patrimonios para la empresa con id " + idVenta)
 	                    .code(HttpStatus.NOT_FOUND.value())
 	                    .build();
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 
-	        List<InventarioResponseDTO> dtoList = inventario.stream()
-	                .map(entity -> InventarioResponseDTO.builder()
-	                        .id(entity.getId())
-	                        .productoId(entity.getProducto().getId())
-	                        .codigo(entity.getProducto().getCodigo())
-	                        .nombre(entity.getProducto().getNombre())
-	                        .cantidad(entity.getCantidad())
-	                        .precioUnitario(entity.getPrecioUnitario())
-	                        .precioVenta(entity.getPrecioVenta())
-	                        .porcentaje(entity.getPorcentaje())
-	                        .build()
-	                ).toList();
+	        List<VentaProductoDTO> dtoList = ventaProductoMapper.listEntityToDtoList(ventaProducto);
 
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(true)
@@ -121,7 +109,7 @@ public class InventarioServiceImpl implements IInventarioService{
 
 	        return ResponseEntity.ok(responseDTO);
 	    } catch (Exception e) {
-	        log.error("Error al buscar inventario por id de empresa: {}", idEmpresa, e);
+	        log.error("Error al buscar venta producto por id de venta: {}", idVenta, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -134,11 +122,11 @@ public class InventarioServiceImpl implements IInventarioService{
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findById(Integer id) {
-	    log.info("Buscar inventario por id: {}", id);
+	    log.info("Buscar venta producto por id: {}", id);
 	    try {
-	        Optional<InventarioEntity> inventario = inventarioRepository.findById(id);
-	        if (inventario.isPresent()) {
-	        	InventarioDTO dto = inventarioMapper.entityToDto(inventario.get());
+	        Optional<VentaProductoEntity> ventaProducto = ventaProductoRepository.findById(id);
+	        if (ventaProducto.isPresent()) {
+	        	VentaProductoDTO dto = ventaProductoMapper.entityToDto(ventaProducto.get());
 	            ResponseDTO responseDTO = ResponseDTO.builder()
 	                    .success(true)
 	                    .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -155,7 +143,7 @@ public class InventarioServiceImpl implements IInventarioService{
 	            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
 	        }
 	    } catch (Exception e) {
-	        log.error("Error al buscar inventario por id: {}", id, e);
+	        log.error("Error al buscar venta producto por id: {}", id, e);
 	        ResponseDTO responseDTO = ResponseDTO.builder()
 	                .success(false)
 	                .message(Constantes.ERROR_QUERY_RECORD_BY_ID)
@@ -168,10 +156,10 @@ public class InventarioServiceImpl implements IInventarioService{
 	@Override
     @Transactional(readOnly = true)
     public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos los inventarios");
+        log.info("Listar todos los venta producto");
         try {
-            var list = inventarioRepository.findAll();
-            var dtoList = inventarioMapper.listEntityToDtoList(list);
+            var list = ventaProductoRepository.findAll();
+            var dtoList = ventaProductoMapper.listEntityToDtoList(list);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.CONSULTED_SUCCESSFULLY)
@@ -180,7 +168,7 @@ public class InventarioServiceImpl implements IInventarioService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al listar los inventarios", e);
+            log.error("Error al listar los venta producto", e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.CONSULTING_ERROR)
@@ -194,9 +182,9 @@ public class InventarioServiceImpl implements IInventarioService{
 	@Override
     @Transactional
     public ResponseEntity<ResponseDTO> deleteById(Integer id) {
-        log.info("Inicio método para eliminar inventario por id: {}", id);
+        log.info("Inicio método para eliminar venta producto por id: {}", id);
         try {
-            if (!inventarioRepository.existsById(id)) {
+            if (!ventaProductoRepository.existsById(id)) {
                 ResponseDTO responseDTO = ResponseDTO.builder()
                         .success(false)
                         .message(Constantes.RECORD_NOT_FOUND)
@@ -204,7 +192,7 @@ public class InventarioServiceImpl implements IInventarioService{
                         .build();
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDTO);
             }
-            inventarioRepository.deleteById(id);
+            ventaProductoRepository.deleteById(id);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(true)
                     .message(Constantes.DELETED_SUCCESSFULLY)
@@ -212,7 +200,7 @@ public class InventarioServiceImpl implements IInventarioService{
                     .build();
             return ResponseEntity.ok(responseDTO);
         } catch (Exception e) {
-            log.error("Error al eliminar inventario con id: {}", id, e);
+            log.error("Error al eliminar venta producto con id: {}", id, e);
             ResponseDTO responseDTO = ResponseDTO.builder()
                     .success(false)
                     .message(Constantes.DELETE_ERROR)

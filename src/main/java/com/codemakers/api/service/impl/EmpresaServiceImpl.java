@@ -311,33 +311,6 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	    }
 	}
 	
-
-
-   /* @Override
-    @Transactional(readOnly = true)
-    public ResponseEntity<ResponseDTO> findAll() {
-        log.info("Listar todos las empresas");
-        try {
-            var list = empresaRepository.findAll();
-            var dtoList = empresaMapper.listEntityToDtoList(list);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.CONSULTED_SUCCESSFULLY)
-                    .code(HttpStatus.OK.value())
-                    .response(dtoList)
-                    .build();
-            return ResponseEntity.ok(responseDTO);
-        } catch (Exception e) {
-            log.error("Error al listar las empresas", e);
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.CONSULTING_ERROR)
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .response(null)
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDTO);
-        }
-    }*/
 	@Override
 	@Transactional(readOnly = true)
 	public ResponseEntity<ResponseDTO> findAll() {
