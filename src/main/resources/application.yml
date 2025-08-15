@@ -26,5 +26,7 @@ spring:
           starttls:
             enable: true
             required: true  
+seguridad:
+  llave: keyacuaplus
 jwt:
   secret: uQ1b9c@#4BvG!8rS2xYpLk7ZtQwEoM5nHfTgVnXz

@@ -12,11 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.codemakers.api.service.IEmpresaService;
+import com.codemakers.api.utils.EncriptarDesencriptar;
 import com.codemakers.commons.dtos.EmpresaDTO;
 import com.codemakers.commons.dtos.EmpresaResponseDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
@@ -40,7 +40,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
 	private final EmpresaMapper empresaMapper;
 	private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final ObjectMapper objectMapper;
-    private final PasswordEncoder passwordEncoder;
+    private final EncriptarDesencriptar encriptarDesencriptar;
 	
 	@Override
 	@Transactional
@@ -103,7 +103,7 @@ public class EmpresaServiceImpl implements IEmpresaService{
             String plainPassword = (String) jsonParams.get("password");
 
             if (plainPassword != null) {
-                String encodedPassword = passwordEncoder.encode(plainPassword);
+                String encodedPassword = encriptarDesencriptar.encriptar(plainPassword);
                 jsonParams.put("password", encodedPassword);
             }
 
