@@ -21,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.codemakers.api.service.impl.AutenticacionServiceImpl;
 import com.codemakers.api.service.impl.UsuarioServiceImpl;
-import com.codemakers.commons.dtos.LoginRequestDTO;
 import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.UpdatePasswordDTO;
@@ -68,8 +67,8 @@ public class UsuarioController {
 	                @Content(mediaType = "application/json", schema = @Schema(implementation = ResponseDTO.class)) }),
 	})
 	@PostMapping("/Autentication")
-	public ResponseEntity<ResponseDTO> autenticacion(@RequestBody LoginRequestDTO request) {
-	    return autenticacionServiceImpl.autentication(request.getUsername(), request.getPassword());
+	public ResponseEntity<ResponseDTO> validarUsuario(@RequestBody UsuarioDTO usuario) {
+	    return this.autenticacionServiceImpl.autenticar(usuario);
 	}
 	
 	@Operation(summary = "Guardar o actualizar usuario")

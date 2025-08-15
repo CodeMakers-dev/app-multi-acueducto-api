@@ -10,12 +10,12 @@ import java.util.Random;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.config.JwtUtil;
+import com.codemakers.api.configs.security.utils.JwtUtil;
 import com.codemakers.api.service.IUsuarioService;
+import com.codemakers.api.utils.EncriptarDesencriptar;
 import com.codemakers.commons.dtos.PersonaDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
 import com.codemakers.commons.dtos.RolDTO;
@@ -51,9 +51,9 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private final RolRepository rolRepository;
 	private final PersonaRepository personaRepository;
 	private final UsuarioMapper usuarioMapper;
-	private final PasswordEncoder passwordEncoder;
 	private final EmailServiceImpl emailService;
 	private final JwtUtil jwtUtil;
+	private final EncriptarDesencriptar serviceEncriptacion;
 	private static final Random RANDOM = new Random();
 
 	@Override
@@ -102,7 +102,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 		entity.setFechaModificacion(new Date());
 		entity.setUsuarioModificacion(usuarioDTO.getUsuarioModificacion());
 		if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isEmpty()) {
-			entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+			entity.setContrasena(serviceEncriptacion.encriptar(usuarioDTO.getContrasena()));
 		}
 		return entity;
 	}
@@ -110,7 +110,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	private UsuarioEntity createEntityFromDto(UsuarioDTO usuarioDTO) {
 		UsuarioEntity entity = usuarioMapper.dtoToEntity(usuarioDTO);
 		if (usuarioDTO.getContrasena() != null && !usuarioDTO.getContrasena().isBlank()) {
-			entity.setContrasena(passwordEncoder.encode(usuarioDTO.getContrasena()));
+			entity.setContrasena(serviceEncriptacion.encriptar(usuarioDTO.getContrasena()));
 		}
 		entity.setFechaCreacion(new Date());
 		entity.setUsuarioCreacion(usuarioDTO.getUsuarioCreacion());
@@ -289,9 +289,12 @@ public class UsuarioServiceImpl implements IUsuarioService {
 					.message("Token requerido").code(HttpStatus.UNAUTHORIZED.value()).build());
 		}
 
-		if (jwtUtil.isTokenInvalid(token)) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseDTO.builder().success(false)
-					.message("Token inválido o expirado").code(HttpStatus.UNAUTHORIZED.value()).build());
+		if (jwtUtil.isTokenInvalidated(token)) {
+		    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ResponseDTO.builder()
+		            .success(false)
+		            .message("Token inválido o expirado")
+		            .code(HttpStatus.UNAUTHORIZED.value())
+		            .build());
 		}
 
 		String username = jwtUtil.getUsernameFromToken(token);
@@ -310,14 +313,14 @@ public class UsuarioServiceImpl implements IUsuarioService {
 						.code(HttpStatus.BAD_REQUEST.value()).build());
 			}
 
-			if (passwordEncoder.matches(nuevaContrasena, usuario.getContrasena())) {
+			if (serviceEncriptacion.encriptar(nuevaContrasena).equals(usuario.getContrasena())) {
 				return ResponseEntity.badRequest()
 						.body(ResponseDTO.builder().success(false)
 								.message("La nueva contraseña debe ser diferente a la actual.")
 								.code(HttpStatus.BAD_REQUEST.value()).build());
 			}
 
-			usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+			usuario.setContrasena(serviceEncriptacion.encriptar(nuevaContrasena));
 			usuario.setFechaModificacion(new Date());
 			usuario.setUsuarioModificacion("Recuperación vía token");
 
@@ -411,7 +414,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 			}
 
 			UsuarioEntity usuario = optionalUsuario.get();
-			usuario.setContrasena(passwordEncoder.encode(nuevaContrasena));
+			usuario.setContrasena(serviceEncriptacion.encriptar(nuevaContrasena));
 			usuario.setFechaModificacion(new Date());
 			usuario.setUsuarioModificacion(usuarioModificacion);
 
@@ -432,7 +435,7 @@ public class UsuarioServiceImpl implements IUsuarioService {
 	    try {
 	        String username = generarNombreUsuario(personaDTO);
 	        String password = generarPasswordAleatoria();
-	        String passwordEncriptada = passwordEncoder.encode(password); 
+	        String passwordEncriptada = serviceEncriptacion.encriptar(password); 
 
 	        Optional<CorreoGeneralEntity> correoOpt = correoGeneralRepository
 	                .findByPersonaIdAndActivoTrue(personaDTO.getId());

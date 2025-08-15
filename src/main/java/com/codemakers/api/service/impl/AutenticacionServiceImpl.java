@@ -1,26 +1,25 @@
 package com.codemakers.api.service.impl;
 
-import java.util.Date;
-
+import java.util.ArrayList;
+import java.util.Objects;
+import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.codemakers.api.config.InvalidCredentialsException;
-import com.codemakers.api.config.JwtUtil;
-import com.codemakers.api.config.UserNotFoundException;
-import com.codemakers.commons.dtos.PersonaDTO;
+import com.codemakers.api.configs.security.utils.JwtUtil;
+import com.codemakers.api.utils.EncriptarDesencriptar;
+import com.codemakers.commons.dtos.AutenticacionDTO;
 import com.codemakers.commons.dtos.ResponseDTO;
-import com.codemakers.commons.dtos.RolDTO;
 import com.codemakers.commons.dtos.UsuarioDTO;
-import com.codemakers.commons.dtos.VigenciaUsuarioDTO;
 import com.codemakers.commons.entities.UsuarioEntity;
-import com.codemakers.commons.entities.VigenciaUsuarioEntity;
 import com.codemakers.commons.repositories.UsuarioRepository;
-import com.codemakers.commons.repositories.VigenciaUsuarioRepository;
 import com.codemakers.commons.utils.Constantes;
 
 import lombok.RequiredArgsConstructor;
@@ -36,80 +35,79 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AutenticacionServiceImpl {
+public class AutenticacionServiceImpl implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtUtil jwtUtil;
-    private final VigenciaUsuarioRepository vigenciaUsuarioRepository;
+    private final EncriptarDesencriptar serviceEncriptacion;
+    private final JwtUtil jwtTokenUtil;
 
-    @Transactional
-    public ResponseEntity<ResponseDTO> autentication(String username, String password) {
-        try {
-            UsuarioEntity usuario = usuarioRepository.findByNombre(username)
-                .orElseThrow(() -> new UserNotFoundException(Constantes.RECORD_NOT_FOUND));
-            if (!passwordEncoder.matches(password, usuario.getContrasena())) {
-                throw new InvalidCredentialsException(Constantes.INVALID_CREDENTIALS);
-            }
-            String token = jwtUtil.generateToken(usuario.getNombre());
+    /**
+	 *
+	 * @author npeñafiel
+	 * @version 1.0
+	 */
+	@Transactional
+	public ResponseEntity<ResponseDTO> autenticar(UsuarioDTO usuario) {
+	    if (Objects.isNull(usuario) || Objects.isNull(usuario.getNombre()) || Objects.isNull(usuario.getContrasena())
+	            || usuario.getNombre().isEmpty() || usuario.getContrasena().isEmpty()) {
 
-            Date fechaActual = new Date();
-            Date fechaVigencia = new Date(fechaActual.getTime() + 3L * 24 * 60 * 60 * 1000); 
+	        ResponseDTO errorResponse = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.DATA_VALIDATION_MESSAGE)
+	                .code(HttpStatus.BAD_REQUEST.value())
+	                .response(null)
+	                .build();
 
-            VigenciaUsuarioEntity vigenciaEntity = new VigenciaUsuarioEntity();
-            vigenciaEntity.setToken(Constantes.BEARER + token);
-            vigenciaEntity.setFechaVigencia(fechaVigencia);
-            vigenciaEntity.setUsuario(usuario);
-            vigenciaEntity.setUsuarioCreacion(usuario.getNombre());
-            vigenciaEntity.setFechaCreacion(fechaActual);
-            vigenciaEntity.setActivo(true);
-            PersonaDTO personaDTO = new PersonaDTO();
-            personaDTO.setId(usuario.getPersona().getId());
-            personaDTO.setNombre(usuario.getPersona().getNombre());
-            RolDTO rolDTO = new RolDTO();
-            rolDTO.setId(usuario.getRol().getId());
-            rolDTO.setNombre(usuario.getRol().getNombre());
-            vigenciaUsuarioRepository.save(vigenciaEntity);
-            VigenciaUsuarioDTO vigenciaDTO = VigenciaUsuarioDTO.builder()
-                    .id(vigenciaEntity.getId())
-                    .token(vigenciaEntity.getToken())
-                    .fechaVigencia(vigenciaEntity.getFechaVigencia())
-                    .usuario(UsuarioDTO.builder()
-                            .id(usuario.getId())
-                            .nombre(usuario.getNombre())
-                            .activo(usuario.getActivo())
-                            .imagen(usuario.getImagen())
-                            .rol(rolDTO)
-                            .persona(personaDTO)
-                            .build())
-                    .usuarioCreacion(vigenciaEntity.getUsuarioCreacion())
-                    .fechaCreacion(vigenciaEntity.getFechaCreacion())
-                    .activo(vigenciaEntity.getActivo())
-                    .build();
-            ResponseDTO responseDTO = ResponseDTO.builder()
-                    .success(true)
-                    .message(Constantes.AUTHENTICATION_SUCCESSFULLY)
-                    .code(HttpStatus.OK.value())
-                    .response(vigenciaDTO)
-                    .build();
+	        return ResponseEntity.badRequest().body(errorResponse);
+	    }
 
-            return ResponseEntity.ok(responseDTO);
+	    Optional<UsuarioEntity> responseUsuario = usuarioRepository.findByNombreAndContrasena(
+	            usuario.getNombre(),
+	            serviceEncriptacion.encriptar(usuario.getContrasena())
+	    );
 
-        } catch (RuntimeException e) {
-            ResponseDTO errorDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(HttpStatus.UNAUTHORIZED.value())
-                    .build();
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorDTO);
+	    if (responseUsuario.isPresent()) {
+	        UsuarioEntity user = responseUsuario.get();
 
-        } catch (Exception e) {
-            ResponseDTO errorDTO = ResponseDTO.builder()
-                    .success(false)
-                    .message(Constantes.AUTHENTICATION_ERROR)
-                    .code(HttpStatus.INTERNAL_SERVER_ERROR.value())
-                    .build();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDTO);
-        }
-    }
+	        final String token = jwtTokenUtil.generateToken(user.getNombre());
+
+	        AutenticacionDTO authData = AutenticacionDTO.builder()
+	                .id(user.getId())
+	                .nombre(user.getNombre())
+	                .token(Constantes.BEARER + token)
+	                .rolId(user.getRol() != null ? user.getRol().getId() : null)
+	                .personaId(user.getPersona() != null ? user.getPersona().getId() : null)
+	                .build();
+
+	        ResponseDTO successResponse = ResponseDTO.builder()
+	                .success(true)
+	                .message(Constantes.AUTHENTICATION_SUCCESSFUL)
+	                .code(HttpStatus.OK.value())
+	                .response(authData)
+	                .build();
+
+	        return ResponseEntity.ok(successResponse);
+
+	    } else {
+	        ResponseDTO errorResponse = ResponseDTO.builder()
+	                .success(false)
+	                .message(Constantes.PLEASE_VERIFY_INCORRECT_DATA)
+	                .code(HttpStatus.BAD_REQUEST.value())
+	                .response(null)
+	                .build();
+
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
+	    }
+	}
+
+
+
+	@Override
+	public UserDetails loadUserByUsername(String nombre) throws UsernameNotFoundException {
+		Optional<UsuarioEntity> usuario = usuarioRepository.findByNombre(nombre);
+		if (!usuario.isPresent()) {
+			throw new UsernameNotFoundException("Nombre no encontrado: " + nombre);
+		}
+		return new User(nombre, usuario.get().getContrasena(), new ArrayList<>());
+	}
 }
